@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/components/*": ["components/*"],
+			"@/styles/*": ["styles/*"],
+			"@/middleware/*": ["middleware/*"],
+			"@/lib/*": ["lib/*"],
+			"@/controllers/*": ["controllers/*"],
+			"@/models/*": ["models/*"],
+			"@/utils/*": ["utils/*"]
+		}
+	}
+}
