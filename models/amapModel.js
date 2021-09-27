@@ -23,8 +23,8 @@ const amapSchema = mongoose.Schema(
 		},
 		accessCode: {
 			type: String,
-			required: false,
-			unique: true,
+			required: true,
+			unique: false,
 		},
 	},
 	{
