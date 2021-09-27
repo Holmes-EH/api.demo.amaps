@@ -53,7 +53,7 @@ const getAmapdetails = async (req, res) => {
 	if (req.body.amap) {
 		const amap = await Amap.findById(req.body.amap._id)
 		if (amap) {
-			res.status(201).json({
+			res.status(200).json({
 				_id: amap._id,
 				name: amap.name,
 				contact: amap.contact,
@@ -66,11 +66,13 @@ const getAmapdetails = async (req, res) => {
 		const amaps = await Amap.find({})
 
 		if (amaps) {
-			res.status(201).json(amaps)
+			res.status(200).json(amaps)
 		} else {
 			res.status(400).json({ message: 'No Amaps Found' })
 		}
 	}
 }
+
+// TODO: Update and maybe delete ?
 
 export { registerAmap, getAmapdetails }
