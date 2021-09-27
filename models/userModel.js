@@ -17,6 +17,10 @@ const userSchema = mongoose.Schema(
 			required: false,
 			ref: 'Amap',
 		},
+		isAdmin: {
+			type: Boolean,
+			default: false,
+		},
 		password: {
 			type: String,
 			required: true,
