@@ -12,6 +12,11 @@ const userSchema = mongoose.Schema(
 			required: true,
 			unique: true,
 		},
+		amap: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: false,
+			ref: 'Amap',
+		},
 		password: {
 			type: String,
 			required: true,
