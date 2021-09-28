@@ -1,5 +1,6 @@
 import User from '@/models/userModel.js'
 import generateToken from '../utils/generateToken.js'
+import jwt from 'jsonwebtoken'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -60,29 +61,34 @@ const authUser = async (req, res) => {
 
 // @desc    Get user Profile
 // @route   Get /api/users
-// @access  Private & admin
+// @access  Private
 const getUser = async (req, res) => {
-	if (req.body._id) {
-		const user = await User.findById(req.body._id)
+	const token = req.headers.authorization.split(' ')[1]
+	var decoded = jwt.verify(token, process.env.JWT_SECRET)
+	const user = await User.findById(decoded.id)
 
-		if (user) {
-			res.json({
-				_id: user._id,
-				name: user.name,
-				email: user.email,
-				isAdmin: user.isAdmin,
-				lastUpdated: user.updatedAt,
-			})
-		} else {
-			res.status(404).json({ message: 'User not found' })
-		}
+	if (user) {
+		res.json({
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			isAdmin: user.isAdmin,
+			lastUpdated: user.updatedAt,
+		})
 	} else {
-		const users = await User.find({}).select('-password')
-		if (users) {
-			res.json(users)
-		} else {
-			res.status(404).json({ message: 'No users Found' })
-		}
+		res.status(404).json({ message: 'User not found' })
+	}
+}
+
+// @desc    Get all user Profiles
+// @route   Get /api/users/all
+// @access  Private + admin
+const getAllUsers = async (req, res) => {
+	const users = await User.find({}).select('-password')
+	if (users) {
+		res.json(users)
+	} else {
+		res.status(404).json({ message: 'No users Found' })
 	}
 }
 
@@ -115,6 +121,18 @@ const updateUser = async (req, res) => {
 	}
 }
 
-// TODO: maybe delete ?
+// @desc    Delete User
+// @route   DELETE /api/users
+// @access  Private + Admin
+const deleteUser = async (req, res) => {
+	const user = await User.findById(req.body._id)
 
-export { registerUser, authUser, getUser, updateUser }
+	if (user) {
+		user.remove()
+		res.json({ message: 'User deleted' })
+	} else {
+		res.status(404).json({ message: 'User not found' })
+	}
+}
+
+export { registerUser, authUser, getUser, getAllUsers, updateUser, deleteUser }

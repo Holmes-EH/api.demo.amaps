@@ -1,4 +1,9 @@
-import { registerUser, getUser, updateUser } from '@/controllers/userController'
+import {
+	registerUser,
+	getUser,
+	updateUser,
+	deleteUser,
+} from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
 import { protect, admin } from '@/middleware/authMiddleware'
@@ -17,5 +22,6 @@ handler
 	.put(protect, async (req, res) => {
 		await updateUser(req, res)
 	})
+	.delete(protect, admin, async (req, res) => await deleteUser(req, res))
 
 export default handler

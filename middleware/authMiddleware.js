@@ -32,7 +32,7 @@ const admin = async (req, res, next) => {
 		req.headers.authorization &&
 		req.headers.authorization.startsWith('Bearer')
 	) {
-		let token = req.headers.authorization.split(' ')[1]
+		const token = req.headers.authorization.split(' ')[1]
 
 		var decoded = jwt.verify(token, process.env.JWT_SECRET)
 		var userId = decoded.id

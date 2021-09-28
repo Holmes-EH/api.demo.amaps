@@ -6,7 +6,7 @@ dbConnect()
 
 // @desc    Register a new amap
 // @route   POST /api/amaps
-// @access  Public
+// @access  Private + Admin
 const registerAmap = async (req, res) => {
 	const { name, contact } = req.body
 
@@ -16,17 +16,7 @@ const registerAmap = async (req, res) => {
 		res.status(400).json({ message: 'Amap already exists' })
 	}
 
-	const amapAccessCodesResult = await Amap.find({}).select('accessCode')
-	let amapAccessCodes = []
-	amapAccessCodesResult.map((object) => {
-		amapAccessCodes.push(object.accessCode)
-	})
-	let accessCode = generateAccessCode(6)
-
-	// While loop to make sure generated accessCode is unique in db
-	while (amapAccessCodes.includes(accessCode)) {
-		accessCode = generateAccessCode(6)
-	}
+	const accessCode = await generateAccessCode(6)
 
 	const amap = await Amap.create({
 		name,
@@ -73,6 +63,42 @@ const getAmapdetails = async (req, res) => {
 	}
 }
 
-// TODO: Update and maybe delete ?
+// @desc    Update Amap details
+// @route   PUT /api/users
+// @access  Private + Admin
+const updateAmap = async (req, res) => {
+	const amap = await Amap.findById(req.body._id)
 
-export { registerAmap, getAmapdetails }
+	if (amap) {
+		amap.name = req.body.name || amap.name
+		amap.contact = req.body.contact || amap.contact
+		if (req.body.updateAccessCode) {
+			amap.accessCode = await generateAccessCode(6)
+		}
+		const updatedAmap = await amap.save()
+		res.json({
+			_id: updatedAmap._id,
+			name: updatedAmap.name,
+			contact: updatedAmap.contact,
+			accessCode: updatedAmap.accessCode,
+		})
+	} else {
+		res.status(404).json({ message: 'Amap not Found' })
+	}
+}
+
+// @desc    Delete Amap
+// @route   DELETE /api/amap
+// @access  Private + Admin
+const deleteAmap = async (req, res) => {
+	const amap = await Amap.findById(req.body._id)
+
+	if (amap) {
+		amap.remove()
+		res.json({ message: 'Amap deleted' })
+	} else {
+		res.status(404).json({ message: 'Amap not found' })
+	}
+}
+
+export { registerAmap, getAmapdetails, updateAmap, deleteAmap }

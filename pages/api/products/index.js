@@ -1,4 +1,9 @@
-import { registerProduct, getProducts } from '@/controllers/productController'
+import {
+	registerProduct,
+	getProducts,
+	updateProduct,
+	deleteProduct,
+} from '@/controllers/productController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
 import { protect, admin } from '@/middleware/authMiddleware'
@@ -13,6 +18,12 @@ handler
 	})
 	.get(protect, async (req, res) => {
 		await getProducts(req, res)
+	})
+	.put(protect, admin, async (req, res) => {
+		await updateProduct(req, res)
+	})
+	.delete(protect, admin, async (req, res) => {
+		await deleteProduct(req, res)
 	})
 
 export default handler

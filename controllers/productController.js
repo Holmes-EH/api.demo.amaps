@@ -60,6 +60,41 @@ const getProducts = async (req, res) => {
 	}
 }
 
-// TODO: Update and maybe delete ?
+// @desc    Update Product details
+// @route   PUT /api/products
+// @access  Private
+const updateProduct = async (req, res) => {
+	const product = await Product.findById(req.body._id)
 
-export { registerProduct, getProducts }
+	if (product) {
+		product.title = req.body.title || product.title
+		product.pricePerKg = req.body.pricePerKg || product.pricePerKg
+		product.isAvailable = req.body.isAvailable ? true : false
+
+		const updatedProduct = await product.save()
+		res.json({
+			_id: updatedProduct._id,
+			name: updatedProduct.title,
+			contact: updatedProduct.pricePerKg,
+			isAvailable: updatedProduct.isAvailable,
+		})
+	} else {
+		res.status(404).json({ message: 'Product not Found' })
+	}
+}
+
+// @desc    Delete Product
+// @route   DELETE /api/products
+// @access  Private + Admin
+const deleteProduct = async (req, res) => {
+	const product = await Product.findById(req.body._id)
+
+	if (product) {
+		product.remove()
+		res.json({ message: 'Product deleted' })
+	} else {
+		res.status(404).json({ message: 'Product not found' })
+	}
+}
+
+export { registerProduct, getProducts, updateProduct, deleteProduct }
