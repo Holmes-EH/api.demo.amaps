@@ -23,4 +23,12 @@ const protect = async (req, res, next) => {
 	}
 }
 
-export default protect
+const admin = (req, res, next) => {
+	if (req.body.user && req.body.user.isAdmin) {
+		next()
+	} else {
+		res.status(401).json({ message: 'Not authorized - Only admin' })
+	}
+}
+
+export { protect, admin }
