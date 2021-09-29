@@ -22,6 +22,10 @@ const orderSchema = mongoose.Schema(
 		deliveryDate: {
 			type: Date,
 		},
+		session: {
+			type: Number,
+			required: true,
+		},
 		amap: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Amap',
