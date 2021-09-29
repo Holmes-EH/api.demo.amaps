@@ -10,16 +10,17 @@ dbConnect()
 // @route   POST /api/users
 // @access  Public
 const registerUser = async (req, res) => {
-	const { name, email, isAdmin, password } = req.body
+	const { name, email, isAdmin, amap, password } = req.body
 
 	const userExists = await User.findOne({ email })
 
 	if (userExists) {
-		res.status(400).json({ error: 'User already exists' })
+		res.status(400).json({ message: 'User already exists' })
 	} else {
 		const user = await User.create({
 			name,
 			email,
+			amap,
 			isAdmin,
 			password,
 		})
@@ -29,11 +30,12 @@ const registerUser = async (req, res) => {
 				_id: user._id,
 				name: user.name,
 				email: user.email,
+				amap: user.amap,
 				isAdmin: user.isAdmin,
 				token: generateToken(user._id),
 			})
 		} else {
-			res.status(400).json({ error: 'Invalid user data' })
+			res.status(400).json({ message: 'Invalid user data' })
 		}
 	}
 }
@@ -52,6 +54,7 @@ const authUser = async (req, res) => {
 			name: user.name,
 			email: user.email,
 			isAdmin: user.isAdmin,
+			amap: user.amap,
 			token: generateToken(user._id),
 		})
 	} else {
@@ -64,7 +67,7 @@ const authUser = async (req, res) => {
 // @access  Private
 const getUser = async (req, res) => {
 	const token = req.headers.authorization.split(' ')[1]
-	var decoded = jwt.verify(token, process.env.JWT_SECRET)
+	const decoded = jwt.verify(token, process.env.JWT_SECRET)
 	const user = await User.findById(decoded.id)
 
 	if (user) {
@@ -72,6 +75,7 @@ const getUser = async (req, res) => {
 			_id: user._id,
 			name: user.name,
 			email: user.email,
+			amap: user.amap,
 			isAdmin: user.isAdmin,
 			lastUpdated: user.updatedAt,
 		})
@@ -104,6 +108,7 @@ const updateUser = async (req, res) => {
 		user.name = req.body.name || user.name
 		user.email = req.body.email || user.email
 		user.isAdmin = req.body.isAdmin || user.isAdmin
+		user.amap = req.body.amap || user.amap
 		if (req.body.password) {
 			user.password = req.body.password
 		}
@@ -113,6 +118,7 @@ const updateUser = async (req, res) => {
 			_id: updatedUser._id,
 			name: updatedUser.name,
 			email: updatedUser.email,
+			amap: updatedUser.amap,
 			isAdmin: updatedUser.isAdmin,
 			token: generateToken(updatedUser._id),
 		})
