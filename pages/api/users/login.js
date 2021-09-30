@@ -1,6 +1,7 @@
 import { authUser } from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
+import allowCors from '@/utils/allowCors'
 
 dbConnect()
 
@@ -10,4 +11,4 @@ handler.post(async (req, res) => {
 	await authUser(req, res)
 })
 
-export default handler
+export default allowCors(handler)

@@ -6,6 +6,7 @@ import {
 } from '@/controllers/productController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
+import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
 
 dbConnect()
@@ -26,4 +27,4 @@ handler
 		await deleteProduct(req, res)
 	})
 
-export default handler
+export default allowCors(handler)

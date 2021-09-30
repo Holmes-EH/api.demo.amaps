@@ -6,6 +6,7 @@ import {
 } from '@/controllers/amapController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
+import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
 
 dbConnect()
@@ -26,4 +27,4 @@ handler
 		await deleteAmap(req, res)
 	})
 
-export default handler
+export default allowCors(handler)

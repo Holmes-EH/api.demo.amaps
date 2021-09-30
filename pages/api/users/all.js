@@ -1,6 +1,7 @@
 import { getAllUsers } from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
+import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
 
 dbConnect()
@@ -11,4 +12,4 @@ handler.get(protect, admin, async (req, res) => {
 	await getAllUsers(req, res)
 })
 
-export default handler
+export default allowCors(handler)

@@ -6,6 +6,7 @@ import {
 } from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
+import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
 
 dbConnect()
@@ -24,4 +25,4 @@ handler
 	})
 	.delete(protect, admin, async (req, res) => await deleteUser(req, res))
 
-export default handler
+export default allowCors(handler)
