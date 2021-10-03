@@ -15,7 +15,7 @@ const registerUser = async (req, res) => {
 	const userExists = await User.findOne({ email })
 
 	if (userExists) {
-		res.status(400).json({ message: 'User already exists' })
+		res.status(400).json({ message: 'Cet ulitilisateur existe déjà' })
 	} else {
 		const user = await User.create({
 			name,
@@ -35,7 +35,7 @@ const registerUser = async (req, res) => {
 				token: generateToken(user._id),
 			})
 		} else {
-			res.status(400).json({ message: 'Invalid user data' })
+			res.status(400).json({ message: 'Données utilisateur erronés' })
 		}
 	}
 }
@@ -58,7 +58,7 @@ const authUser = async (req, res) => {
 			token: generateToken(user._id),
 		})
 	} else {
-		res.status(401).json({ message: 'Invalid email or password' })
+		res.status(401).json({ message: 'Email ou mot de passe erroné' })
 	}
 }
 
@@ -78,7 +78,7 @@ const getUser = async (req, res) => {
 			lastUpdated: user.updatedAt,
 		})
 	} else {
-		res.status(404).json({ message: 'User not found' })
+		res.status(404).json({ message: 'Utilisateur introuvable' })
 	}
 }
 
@@ -90,7 +90,7 @@ const getAllUsers = async (req, res) => {
 	if (users) {
 		res.json(users)
 	} else {
-		res.status(404).json({ message: 'No users Found' })
+		res.status(404).json({ message: 'Aucun utilisateur trouvé' })
 	}
 }
 
@@ -119,7 +119,7 @@ const updateUser = async (req, res) => {
 			token: generateToken(updatedUser._id),
 		})
 	} else {
-		res.status(404).json({ message: 'User not found' })
+		res.status(404).json({ message: 'Utilisateur introuvable' })
 	}
 }
 
@@ -131,9 +131,9 @@ const deleteUser = async (req, res) => {
 
 	if (user) {
 		user.remove()
-		res.json({ message: 'User deleted' })
+		res.json({ message: 'Utilisateur supprimé' })
 	} else {
-		res.status(404).json({ message: 'User not found' })
+		res.status(404).json({ message: 'Utilisateur introuvable' })
 	}
 }
 

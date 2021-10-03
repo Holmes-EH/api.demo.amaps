@@ -12,7 +12,7 @@ const registerProduct = async (req, res) => {
 	const productExists = await Product.findOne({ title })
 
 	if (productExists) {
-		res.status(400).json({ message: 'Product already exists' })
+		res.status(400).json({ message: 'Ce produit existe déjà' })
 	} else {
 		const product = await Product.create({
 			title,
@@ -28,7 +28,7 @@ const registerProduct = async (req, res) => {
 				isAvailable: product.isAvailable,
 			})
 		} else {
-			res.status(400).json({ message: 'Invalid product data' })
+			res.status(400).json({ message: 'Données produit erronés' })
 		}
 	}
 }
@@ -42,7 +42,7 @@ const getAllProducts = async (req, res) => {
 	if (products) {
 		res.status(200).json(products)
 	} else {
-		res.status(400).json({ message: 'No Products Found' })
+		res.status(400).json({ message: 'Aucun produit trouvé' })
 	}
 }
 
@@ -59,7 +59,9 @@ const getProduct = async (req, res) => {
 			isAvailable: product.isAvailable,
 		})
 	} else {
-		res.status(400).json({ message: 'Product not found' })
+		res.status(400).json({
+			message: "Ce produit n'est pas dans la base de données...",
+		})
 	}
 }
 
@@ -82,7 +84,9 @@ const updateProduct = async (req, res) => {
 			isAvailable: updatedProduct.isAvailable,
 		})
 	} else {
-		res.status(404).json({ message: 'Product not Found' })
+		res.status(404).json({
+			message: "Ce produit n'est pas dans la base de données...",
+		})
 	}
 }
 
@@ -96,7 +100,9 @@ const deleteProduct = async (req, res) => {
 		product.remove()
 		res.json({ message: 'Product deleted' })
 	} else {
-		res.status(404).json({ message: 'Product not found' })
+		res.status(404).json({
+			message: "Ce produit n'est pas dans la base de données...",
+		})
 	}
 }
 

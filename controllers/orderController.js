@@ -2,6 +2,7 @@ import Order from '@/models/orderModel'
 import jwt from 'jsonwebtoken'
 
 import dbConnect from '@/lib/dbConnect.js'
+import { normalizeConfig } from 'next/dist/next-server/server/config-shared'
 
 dbConnect()
 
@@ -15,7 +16,7 @@ const newOrder = async (req, res) => {
 
 	if (orderExists) {
 		res.status(400).json({
-			mesage: `Order already exists for this user this month\nUpdate existing one -> ${orderExists._id}`,
+			mesage: `Cette commande pour cet utilisateur et ce mois existe déjà\nMettez le à jour -> ${orderExists._id}`,
 		})
 	} else {
 		const order = await Order.create({
@@ -34,7 +35,7 @@ const newOrder = async (req, res) => {
 				session: order.session,
 			})
 		} else {
-			res.status(400).json({ message: 'Invalid order data' })
+			res.status(400).json({ message: 'Données de commande érronés' })
 		}
 	}
 }
@@ -53,7 +54,9 @@ const getSingleOrder = async (req, res) => {
 			session: order.session,
 		})
 	} else {
-		res.status(400).json({ message: 'Order not found' })
+		res.status(400).json({
+			message: "Cette commande n'est pas dans la base de données.",
+		})
 	}
 }
 
@@ -69,7 +72,9 @@ const getMyOrders = async (req, res) => {
 			userOrders,
 		})
 	} else {
-		res.status(404).json({ message: 'Found no orders in your name' })
+		res.status(404).json({
+			message: "Nous n'avons trouvé aucune commande à votre nom...",
+		})
 	}
 }
 
@@ -86,7 +91,7 @@ const getAllOrders = async (req, res) => {
 			allOrders,
 		})
 	} else {
-		res.status(404).json({ message: 'Found no orders' })
+		res.status(404).json({ message: 'Aucune commande trouvée' })
 	}
 }
 
@@ -101,7 +106,7 @@ const getAllOrdersBySession = async (req, res) => {
 			sessionOrders,
 		})
 	} else {
-		res.status(404).json({ message: 'Found no orders' })
+		res.status(404).json({ message: 'Aucune commande trouvée' })
 	}
 }
 
@@ -122,7 +127,7 @@ const updateOrder = async (req, res) => {
 			session: updatedOrder.session,
 		})
 	} else {
-		res.status(404).json({ message: 'Order not found' })
+		res.status(404).json({ message: 'Commande introuvable...' })
 	}
 }
 
@@ -135,7 +140,7 @@ const deleteOrder = async (req, res) => {
 		order.remove()
 		res.json({ message: 'Order deleted' })
 	} else {
-		res.status(404).json({ message: 'Order not found' })
+		res.status(404).json({ message: 'Commande introuvable...' })
 	}
 }
 
