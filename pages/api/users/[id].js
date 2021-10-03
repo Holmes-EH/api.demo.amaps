@@ -1,4 +1,4 @@
-import { getAllUsers } from '@/controllers/userController'
+import { getUser, deleteUser } from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
 import allowCors from '@/utils/allowCors'
@@ -8,8 +8,10 @@ dbConnect()
 
 const handler = nc({ attachParams: true })
 
-handler.get(protect, admin, async (req, res) => {
-	await getAllUsers(req, res)
-})
+handler
+	.get(protect, async (req, res) => {
+		await getUser(req, res)
+	})
+	.delete(protect, admin, async (req, res) => await deleteUser(req, res))
 
 export default allowCors(handler)

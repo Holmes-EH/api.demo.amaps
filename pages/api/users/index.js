@@ -1,8 +1,7 @@
 import {
 	registerUser,
-	getUser,
+	getAllUsers,
 	updateUser,
-	deleteUser,
 } from '@/controllers/userController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
@@ -17,12 +16,11 @@ handler
 	.post(async (req, res) => {
 		await registerUser(req, res)
 	})
-	.get(protect, async (req, res) => {
-		await getUser(req, res)
+	.get(protect, admin, async (req, res) => {
+		await getAllUsers(req, res)
 	})
 	.put(protect, async (req, res) => {
 		await updateUser(req, res)
 	})
-	.delete(protect, admin, async (req, res) => await deleteUser(req, res))
 
 export default allowCors(handler)

@@ -21,6 +21,10 @@ const amapSchema = mongoose.Schema(
 				postalCode: { type: String, required: false },
 			},
 		},
+		groupement: {
+			type: String,
+			unique: true,
+		},
 		accessCode: {
 			type: String,
 			required: true,

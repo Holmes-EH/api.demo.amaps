@@ -63,15 +63,13 @@ const authUser = async (req, res) => {
 }
 
 // @desc    Get user Profile
-// @route   Get /api/users
+// @route   Get /api/users/id
 // @access  Private
 const getUser = async (req, res) => {
-	const token = req.headers.authorization.split(' ')[1]
-	const decoded = jwt.verify(token, process.env.JWT_SECRET)
-	const user = await User.findById(decoded.id)
+	const user = await User.findById(req.query.id)
 
 	if (user) {
-		res.json({
+		res.status(200).json({
 			_id: user._id,
 			name: user.name,
 			email: user.email,
@@ -102,8 +100,6 @@ const getAllUsers = async (req, res) => {
 const updateUser = async (req, res) => {
 	const user = await User.findById(req.body._id)
 
-	// TODO: Maybe check if id in token is of same user  user.isAdmin
-
 	if (user) {
 		user.name = req.body.name || user.name
 		user.email = req.body.email || user.email
@@ -131,7 +127,7 @@ const updateUser = async (req, res) => {
 // @route   DELETE /api/users
 // @access  Private + Admin
 const deleteUser = async (req, res) => {
-	const user = await User.findById(req.body._id)
+	const user = await User.findById(req.query.id)
 
 	if (user) {
 		user.remove()

@@ -8,12 +8,12 @@ dbConnect()
 // @route   POST /api/amaps
 // @access  Private + Admin
 const registerAmap = async (req, res) => {
-	const { name, contact } = req.body
+	const { name, contact, groupement } = req.body
 
 	const amapExists = await Amap.findOne({ name })
 
 	if (amapExists) {
-		res.status(400).json({ message: 'Amap already exists' })
+		res.status(400).json({ message: 'Cette Amap existe déjà' })
 	}
 
 	const accessCode = await generateAccessCode(6)
@@ -21,6 +21,7 @@ const registerAmap = async (req, res) => {
 	const amap = await Amap.create({
 		name,
 		contact,
+		groupement,
 		accessCode,
 	})
 
@@ -29,37 +30,41 @@ const registerAmap = async (req, res) => {
 			_id: amap._id,
 			name: amap.name,
 			contact: amap.contact,
+			groupement: amap.groupement,
 			accessCode: amap.accessCode,
 		})
 	} else {
-		res.status(400).json({ message: 'Amap not found' })
+		res.status(400).json({ message: 'Amap introuvable' })
+	}
+}
+
+// @desc    Get all amap details
+// @route   Get /api/amaps
+// @access  Public
+const getAllAmaps = async (req, res) => {
+	const amaps = await Amap.find({}).sort({ createdAt: 'asc' })
+	if (amaps) {
+		res.status(200).json(amaps)
+	} else {
+		res.status(400).json({ message: 'Aucune Amap trouvée' })
 	}
 }
 
 // @desc    Get amap details
-// @route   Get /api/amaps
+// @route   Get /api/amaps/id
 // @access  Public
-const getAmapdetails = async (req, res) => {
-	if (req.body.amap) {
-		const amap = await Amap.findById(req.body.amap._id)
-		if (amap) {
-			res.status(200).json({
-				_id: amap._id,
-				name: amap.name,
-				contact: amap.contact,
-				accessCode: amap.accessCode,
-			})
-		} else {
-			res.status(400).json({ message: 'Amap not found' })
-		}
+const getAmapDetails = async (req, res) => {
+	const amap = await Amap.findById(req.query.id)
+	if (amap) {
+		res.status(200).json({
+			_id: amap._id,
+			name: amap.name,
+			contact: amap.contact,
+			groupement: amap.groupement,
+			accessCode: amap.accessCode,
+		})
 	} else {
-		const amaps = await Amap.find({})
-
-		if (amaps) {
-			res.status(200).json(amaps)
-		} else {
-			res.status(400).json({ message: 'No Amaps Found' })
-		}
+		res.status(404).json({ message: 'Amap introuvable' })
 	}
 }
 
@@ -72,6 +77,7 @@ const updateAmap = async (req, res) => {
 	if (amap) {
 		amap.name = req.body.name || amap.name
 		amap.contact = req.body.contact || amap.contact
+		amap.groupement = req.body.groupement || amap.groupement
 		if (req.body.updateAccessCode) {
 			amap.accessCode = await generateAccessCode(6)
 		}
@@ -80,10 +86,11 @@ const updateAmap = async (req, res) => {
 			_id: updatedAmap._id,
 			name: updatedAmap.name,
 			contact: updatedAmap.contact,
+			groupement: updatedAmap.groupement,
 			accessCode: updatedAmap.accessCode,
 		})
 	} else {
-		res.status(404).json({ message: 'Amap not Found' })
+		res.status(404).json({ message: 'Amap introuvable' })
 	}
 }
 
@@ -91,14 +98,14 @@ const updateAmap = async (req, res) => {
 // @route   DELETE /api/amap
 // @access  Private + Admin
 const deleteAmap = async (req, res) => {
-	const amap = await Amap.findById(req.body._id)
+	const amap = await Amap.findById(req.query.id)
 
 	if (amap) {
 		amap.remove()
-		res.json({ message: 'Amap deleted' })
+		res.json({ message: 'Amap supprimée' })
 	} else {
-		res.status(404).json({ message: 'Amap not found' })
+		res.status(404).json({ message: 'Amap introuvable' })
 	}
 }
 
-export { registerAmap, getAmapdetails, updateAmap, deleteAmap }
+export { registerAmap, getAllAmaps, getAmapDetails, updateAmap, deleteAmap }

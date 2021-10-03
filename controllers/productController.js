@@ -36,27 +36,30 @@ const registerProduct = async (req, res) => {
 // @desc    Get products
 // @route   Get /api/products
 // @access  Public
-const getProducts = async (req, res) => {
-	if (req.body.product) {
-		const product = await Product.findById(req.body.product._id)
-		if (product) {
-			res.status(200).json({
-				_id: product._id,
-				title: product.title,
-				pricePerKg: product.pricePerKg,
-				isAvailable: product.isAvailable,
-			})
-		} else {
-			res.status(400).json({ message: 'Product not found' })
-		}
-	} else {
-		const products = await Product.find({})
+const getAllProducts = async (req, res) => {
+	const products = await Product.find({})
 
-		if (products) {
-			res.status(200).json(products)
-		} else {
-			res.status(400).json({ message: 'No Products Found' })
-		}
+	if (products) {
+		res.status(200).json(products)
+	} else {
+		res.status(400).json({ message: 'No Products Found' })
+	}
+}
+
+// @desc    Get products
+// @route   Get /api/products/id
+// @access  Public
+const getProduct = async (req, res) => {
+	const product = await Product.findById(req.query.id)
+	if (product) {
+		res.status(200).json({
+			_id: product._id,
+			title: product.title,
+			pricePerKg: product.pricePerKg,
+			isAvailable: product.isAvailable,
+		})
+	} else {
+		res.status(400).json({ message: 'Product not found' })
 	}
 }
 
@@ -84,10 +87,10 @@ const updateProduct = async (req, res) => {
 }
 
 // @desc    Delete Product
-// @route   DELETE /api/products
+// @route   DELETE /api/products/id
 // @access  Private + Admin
 const deleteProduct = async (req, res) => {
-	const product = await Product.findById(req.body._id)
+	const product = await Product.findById(req.query.id)
 
 	if (product) {
 		product.remove()
@@ -97,4 +100,10 @@ const deleteProduct = async (req, res) => {
 	}
 }
 
-export { registerProduct, getProducts, updateProduct, deleteProduct }
+export {
+	registerProduct,
+	getProduct,
+	getAllProducts,
+	updateProduct,
+	deleteProduct,
+}

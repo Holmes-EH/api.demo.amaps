@@ -1,6 +1,5 @@
 import {
-	deleteOrder,
-	getOrders,
+	getAllOrders,
 	newOrder,
 	updateOrder,
 } from '@/controllers/orderController'
@@ -14,14 +13,11 @@ handler
 	.post(protect, async (req, res) => {
 		await newOrder(req, res)
 	})
-	.get(protect, async (req, res) => {
-		await getOrders(req, res)
+	.get(protect, admin, async (req, res) => {
+		await getAllOrders(req, res)
 	})
 	.put(protect, async (req, res) => {
 		await updateOrder(req, res)
-	})
-	.delete(protect, admin, async (req, res) => {
-		await deleteOrder(req, res)
 	})
 
 export default allowCors(handler)

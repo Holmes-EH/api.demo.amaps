@@ -18,12 +18,12 @@ const protect = async (req, res, next) => {
 
 			next()
 		} catch (error) {
-			res.status(401).json({ error: 'Not authorized, token failed' })
+			res.status(401).json({ error: 'Non autorisé, token failed' })
 		}
 	}
 
 	if (!token) {
-		res.status(401).json({ error: 'Not Authorized, no token' })
+		res.status(401).json({ error: 'Non autorisé, pas de token' })
 	}
 }
 
@@ -41,11 +41,13 @@ const admin = async (req, res, next) => {
 		if (user.isAdmin) {
 			next()
 		} else {
-			res.status(401).json({ message: 'Not authorized - Only admin' })
+			res.status(401).json({
+				message: 'Non autorisé - Administrateurs seulement',
+			})
 		}
 	} else {
 		res.status(401).json({
-			message: `Not authorized - Must be logged in \n ${err}`,
+			message: `Non autorisé - Vous devez être connecté \n ${err}`,
 		})
 	}
 }

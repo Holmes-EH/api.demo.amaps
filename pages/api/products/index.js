@@ -1,8 +1,7 @@
 import {
 	registerProduct,
-	getProducts,
+	getAllProducts,
 	updateProduct,
-	deleteProduct,
 } from '@/controllers/productController'
 import dbConnect from '@/lib/dbConnect'
 import nc from 'next-connect'
@@ -18,13 +17,10 @@ handler
 		await registerProduct(req, res)
 	})
 	.get(protect, async (req, res) => {
-		await getProducts(req, res)
+		await getAllProducts(req, res)
 	})
 	.put(protect, admin, async (req, res) => {
 		await updateProduct(req, res)
-	})
-	.delete(protect, admin, async (req, res) => {
-		await deleteProduct(req, res)
 	})
 
 export default allowCors(handler)
