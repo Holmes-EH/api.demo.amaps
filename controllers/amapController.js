@@ -14,27 +14,27 @@ const registerAmap = async (req, res) => {
 
 	if (amapExists) {
 		res.status(400).json({ message: 'Cette Amap existe déjà' })
-	}
-
-	const accessCode = await generateAccessCode(6)
-
-	const amap = await Amap.create({
-		name,
-		contact,
-		groupement,
-		accessCode,
-	})
-
-	if (amap) {
-		res.status(201).json({
-			_id: amap._id,
-			name: amap.name,
-			contact: amap.contact,
-			groupement: amap.groupement,
-			accessCode: amap.accessCode,
-		})
 	} else {
-		res.status(400).json({ message: 'Amap introuvable' })
+		const accessCode = await generateAccessCode(6)
+
+		const amap = await Amap.create({
+			name,
+			contact,
+			groupement,
+			accessCode,
+		})
+
+		if (amap) {
+			res.status(201).json({
+				_id: amap._id,
+				name: amap.name,
+				contact: amap.contact,
+				groupement: amap.groupement,
+				accessCode: amap.accessCode,
+			})
+		} else {
+			res.status(400).json({ message: 'Amap introuvable' })
+		}
 	}
 }
 
@@ -46,7 +46,7 @@ const getAllAmaps = async (req, res) => {
 	if (amaps) {
 		res.status(200).json(amaps)
 	} else {
-		res.status(400).json({ message: 'Aucune Amap trouvée' })
+		res.status(404).json({ message: 'Aucune Amap trouvée' })
 	}
 }
 
@@ -69,10 +69,10 @@ const getAmapDetails = async (req, res) => {
 }
 
 // @desc    Update Amap details
-// @route   PUT /api/users
+// @route   PUT /api/amaps
 // @access  Private + Admin
 const updateAmap = async (req, res) => {
-	const amap = await Amap.findById(req.body._id)
+	const amap = await Amap.findById(req.body.id)
 
 	if (amap) {
 		amap.name = req.body.name || amap.name

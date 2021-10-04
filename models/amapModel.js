@@ -8,7 +8,7 @@ const amapSchema = mongoose.Schema(
 		},
 		contact: {
 			emails: [
-				{ email: { type: String, required: false, unique: true } },
+				{ email: { type: String, required: false, unique: false } },
 			],
 			tel: {
 				type: String,
