@@ -69,7 +69,7 @@ const getProduct = async (req, res) => {
 // @route   PUT /api/products
 // @access  Private
 const updateProduct = async (req, res) => {
-	const product = await Product.findById(req.body._id)
+	const product = await Product.findById(req.body.id)
 
 	if (product) {
 		product.title = req.body.title || product.title
@@ -79,8 +79,8 @@ const updateProduct = async (req, res) => {
 		const updatedProduct = await product.save()
 		res.json({
 			_id: updatedProduct._id,
-			name: updatedProduct.title,
-			contact: updatedProduct.pricePerKg,
+			title: updatedProduct.title,
+			pricePerKg: updatedProduct.pricePerKg,
 			isAvailable: updatedProduct.isAvailable,
 		})
 	} else {
@@ -98,7 +98,7 @@ const deleteProduct = async (req, res) => {
 
 	if (product) {
 		product.remove()
-		res.json({ message: 'Product deleted' })
+		res.json({ message: 'Produit supprimé avec succès' })
 	} else {
 		res.status(404).json({
 			message: "Ce produit n'est pas dans la base de données...",
