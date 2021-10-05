@@ -42,7 +42,7 @@ const registerAmap = async (req, res) => {
 // @route   Get /api/amaps
 // @access  Public
 const getAllAmaps = async (req, res) => {
-	const amaps = await Amap.find({}).sort({ createdAt: 'asc' })
+	const amaps = await Amap.find({}).sort({ groupement: 'asc' })
 	if (amaps) {
 		res.status(200).json(amaps)
 	} else {
