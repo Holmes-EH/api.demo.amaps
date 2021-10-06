@@ -37,7 +37,7 @@ const registerProduct = async (req, res) => {
 // @route   Get /api/products
 // @access  Public
 const getAllProducts = async (req, res) => {
-	const products = await Product.find({})
+	const products = await Product.find({}).sort('title')
 
 	if (products) {
 		res.status(200).json(products)
