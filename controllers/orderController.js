@@ -2,7 +2,6 @@ import Order from '@/models/orderModel'
 import jwt from 'jsonwebtoken'
 
 import dbConnect from '@/lib/dbConnect.js'
-import { normalizeConfig } from 'next/dist/next-server/server/config-shared'
 
 dbConnect()
 
@@ -16,7 +15,7 @@ const newOrder = async (req, res) => {
 
 	if (orderExists) {
 		res.status(400).json({
-			mesage: `Cette commande pour cet utilisateur et ce mois existe déjà\nMettez le à jour -> ${orderExists._id}`,
+			mesage: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 		})
 	} else {
 		const order = await Order.create({
@@ -45,6 +44,14 @@ const newOrder = async (req, res) => {
 // @access  Private
 const getSingleOrder = async (req, res) => {
 	const order = await Order.findById(req.query.id)
+		.populate({
+			path: 'details',
+			populate: {
+				path: 'product',
+			},
+		})
+		.populate({ path: 'amap', select: ['name', 'groupement'] })
+
 	if (order) {
 		res.status(200).json({
 			_id: order._id,
@@ -66,7 +73,16 @@ const getSingleOrder = async (req, res) => {
 const getMyOrders = async (req, res) => {
 	const token = req.headers.authorization.split(' ')[1]
 	const decoded = jwt.verify(token, process.env.JWT_SECRET)
-	const userOrders = await Order.find({ client: decoded.id }).limit(10)
+	const userOrders = await Order.find({ client: decoded.id })
+		.limit(10)
+		.populate({
+			path: 'details',
+			populate: {
+				path: 'product',
+			},
+		})
+		.populate({ path: 'amap', select: ['name', 'groupement'] })
+
 	if (userOrders) {
 		res.status(200).json({
 			userOrders,
@@ -82,29 +98,67 @@ const getMyOrders = async (req, res) => {
 // @route   Get /api/orders
 // @access  Private + admin
 const getAllOrders = async (req, res) => {
-	const allOrders = await Order.find({})
+	const amap = req.query.amap
 
 	// TODO : Implement pagination
 
-	if (allOrders) {
-		res.status(200).json({
-			allOrders,
-		})
+	if (amap) {
+		const allOrders = await Order.find({ amap })
+			.populate({
+				path: 'details',
+				populate: {
+					path: 'product',
+				},
+			})
+			.populate({ path: 'amap', select: ['name', 'groupement'] })
+			.sort({ session: 'asc' })
+		if (allOrders) {
+			res.status(200).json({
+				allOrders,
+			})
+		} else {
+			res.status(404).json({ message: 'Aucune commande trouvée' })
+		}
 	} else {
-		res.status(404).json({ message: 'Aucune commande trouvée' })
+		const allOrders = await Order.find()
+			.populate({
+				path: 'details',
+				populate: {
+					path: 'product',
+				},
+			})
+			.populate({ path: 'amap', select: ['name', 'groupement'] })
+			.sort({ amap: 'asc' })
+		if (allOrders) {
+			res.status(200).json({
+				allOrders,
+			})
+		} else {
+			res.status(404).json({ message: 'Aucune commande trouvée' })
+		}
 	}
 }
 
 // @desc    Get orders
-// @route   Get /api/orders
+// @route   Get /api/orders/session
 // @access  Private + admin
 const getAllOrdersBySession = async (req, res) => {
-	const sessionOrders = await Order.find({ session: req.query.session })
+	const sessionOrders = await Order.find({
+		session: req.query.session,
+	})
+		.populate({
+			path: 'details',
+			populate: {
+				path: 'product',
+				select: ['title', 'pricePerKg'],
+			},
+		})
+		.populate({ path: 'amap', select: ['name', 'groupement'] })
+		.populate({ path: 'client', select: ['name'] })
+		.sort({ amap: 'asc' })
 
 	if (sessionOrders) {
-		res.status(200).json({
-			sessionOrders,
-		})
+		res.status(200).json(sessionOrders)
 	} else {
 		res.status(404).json({ message: 'Aucune commande trouvée' })
 	}
@@ -116,7 +170,9 @@ const getAllOrdersBySession = async (req, res) => {
 const updateOrder = async (req, res) => {
 	const order = await Order.findById(req.body.order._id)
 
+	console.log(req.body.order.paid)
 	if (order) {
+		order.paid = req.body.order.paid ? true : false
 		order.details = req.body.order.details || order.details
 		const updatedOrder = await order.save()
 		res.status(200).json({
@@ -125,6 +181,7 @@ const updateOrder = async (req, res) => {
 			details: updatedOrder.details,
 			amap: updatedOrder.amap,
 			session: updatedOrder.session,
+			paid: updatedOrder.paid,
 		})
 	} else {
 		res.status(404).json({ message: 'Commande introuvable...' })
