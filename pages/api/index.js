@@ -1,3 +1,3 @@
 export default function handler(req, res) {
-	res.status(403).json({ message: 'Nothing to see here...' })
+	res.status(418).json({ message: "I'm a teapot" })
 }
