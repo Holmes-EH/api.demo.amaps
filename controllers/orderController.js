@@ -48,6 +48,7 @@ const getSingleOrder = async (req, res) => {
 			path: 'details',
 			populate: {
 				path: 'product',
+				select: ['title', 'pricePerKg'],
 			},
 		})
 		.populate({ path: 'amap', select: ['name', 'groupement'] })
@@ -79,6 +80,7 @@ const getMyOrders = async (req, res) => {
 			path: 'details',
 			populate: {
 				path: 'product',
+				select: ['title', 'pricePerKg'],
 			},
 		})
 		.populate({ path: 'amap', select: ['name', 'groupement'] })
@@ -108,6 +110,7 @@ const getAllOrders = async (req, res) => {
 				path: 'details',
 				populate: {
 					path: 'product',
+					select: ['title', 'pricePerKg'],
 				},
 			})
 			.populate({ path: 'amap', select: ['name', 'groupement'] })
@@ -143,6 +146,10 @@ const getAllOrders = async (req, res) => {
 // @route   Get /api/orders/session
 // @access  Private + admin
 const getAllOrdersBySession = async (req, res) => {
+	const pageSize = 10
+	const page = Number(req.query.pageNumber) || 1
+
+	const count = await Order.countDocuments({ session: req.query.session })
 	const sessionOrders = await Order.find({
 		session: req.query.session,
 	})
@@ -150,15 +157,21 @@ const getAllOrdersBySession = async (req, res) => {
 			path: 'details',
 			populate: {
 				path: 'product',
-				select: ['title', 'pricePerKg'],
+				select: ['_id', 'title', 'pricePerKg'],
 			},
 		})
 		.populate({ path: 'amap', select: ['name', 'groupement'] })
 		.populate({ path: 'client', select: ['name'] })
 		.sort({ amap: 'asc' })
+		.limit(pageSize)
+		.skip(pageSize * (page - 1))
 
 	if (sessionOrders) {
-		res.status(200).json(sessionOrders)
+		res.status(200).json({
+			sessionOrders,
+			page,
+			pages: Math.ceil(count / pageSize),
+		})
 	} else {
 		res.status(404).json({ message: 'Aucune commande trouvée' })
 	}
@@ -169,12 +182,21 @@ const getAllOrdersBySession = async (req, res) => {
 // @access  Private
 const updateOrder = async (req, res) => {
 	const order = await Order.findById(req.body.order._id)
-
-	console.log(req.body.order.paid)
 	if (order) {
 		order.paid = req.body.order.paid ? true : false
 		order.details = req.body.order.details || order.details
-		const updatedOrder = await order.save()
+		const newOrder = await order.save()
+		const updatedOrder = await Order.findById(newOrder._id)
+			.populate({
+				path: 'details',
+				populate: {
+					path: 'product',
+					select: ['title', 'pricePerKg'],
+				},
+			})
+			.populate({ path: 'amap', select: ['name', 'groupement'] })
+			.populate({ path: 'client', select: ['name'] })
+
 		res.status(200).json({
 			_id: updatedOrder._id,
 			client: updatedOrder.client,

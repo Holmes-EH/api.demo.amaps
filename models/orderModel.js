@@ -41,4 +41,10 @@ const orderSchema = mongoose.Schema(
 	}
 )
 
+orderSchema.pre('save', function () {
+	this.details = this.details.sort((a, b) =>
+		a.title > b.title ? 1 : b.title > a.title ? -1 : 0
+	)
+})
+
 module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema)
