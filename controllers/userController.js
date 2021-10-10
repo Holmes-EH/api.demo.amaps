@@ -1,6 +1,5 @@
 import User from '@/models/userModel.js'
 import generateToken from '../utils/generateToken.js'
-import jwt from 'jsonwebtoken'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -83,12 +82,29 @@ const getUser = async (req, res) => {
 }
 
 // @desc    Get all user Profiles
-// @route   Get /api/users/all
+// @route   Get /api/users/all(?keyword)
 // @access  Private + admin
 const getAllUsers = async (req, res) => {
-	const users = await User.find({}).select('-password')
+	const pageSize = 10
+	const page = Number(req.query.pageNumber) || 1
+	const keyword = req.query.keyword
+		? {
+				name: {
+					$regex: req.query.keyword,
+					$options: 'i',
+				},
+		  }
+		: {}
+
+	const count = await User.countDocuments({ ...keyword })
+	const users = await User.find({ ...keyword })
+		.select('-password')
+		.sort({ name: 'asc' })
+		.populate({ path: 'amap', select: ['name', 'groupement'] })
+		.limit(pageSize)
+		.skip(pageSize * (page - 1))
 	if (users) {
-		res.json(users)
+		res.json({ users, page, pages: Math.ceil(count / pageSize) })
 	} else {
 		res.status(404).json({ message: 'Aucun utilisateur trouvé' })
 	}
