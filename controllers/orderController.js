@@ -211,13 +211,13 @@ const updateOrder = async (req, res) => {
 }
 
 // @desc    Delete Order
-// @route   DELETE /api/orders
+// @route   DELETE /api/orders/id
 // @access  Private + Admin
 const deleteOrder = async (req, res) => {
 	const order = await Order.findById(req.query.id)
 	if (order) {
 		order.remove()
-		res.json({ message: 'Order deleted' })
+		res.json({ message: 'Commande supprimée' })
 	} else {
 		res.status(404).json({ message: 'Commande introuvable...' })
 	}

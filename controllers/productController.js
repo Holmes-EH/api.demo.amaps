@@ -1,7 +1,6 @@
 import Product from '@/models/productModel.js'
 import Order from '@/models/orderModel.js'
 import dbConnect from '@/lib/dbConnect.js'
-import orders from 'pages/api/orders'
 
 dbConnect()
 
@@ -97,9 +96,9 @@ const updateProduct = async (req, res) => {
 // @access  Private + Admin
 const deleteProduct = async (req, res) => {
 	const product = await Product.findById(req.query.id)
-	const ordersWithProduct = await Order.find({
+	await Order.find({
 		'details.product': { $in: req.query.id },
-	}).then(function (results) {
+	}).then((results) => {
 		return results.map(async (order) => {
 			order.details = order.details.filter(
 				(detail) => detail.product.toString() !== req.query.id
@@ -110,7 +109,7 @@ const deleteProduct = async (req, res) => {
 
 	if (product) {
 		product.remove()
-		res.json({ ordersWithProduct, message: 'Produit supprimé avec succès' })
+		res.json({ message: 'Produit supprimé avec succès' })
 	} else {
 		res.status(404).json({
 			message: "Ce produit n'est pas dans la base de données...",
