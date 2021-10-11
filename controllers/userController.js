@@ -1,5 +1,7 @@
 import User from '@/models/userModel.js'
+import Order from '@/models/orderModel.js'
 import generateToken from '../utils/generateToken.js'
+import jwt from 'jsonwebtoken'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -116,10 +118,18 @@ const getAllUsers = async (req, res) => {
 const updateUser = async (req, res) => {
 	const user = await User.findById(req.body._id)
 
+	const token = req.headers.authorization.split(' ')[1]
+
+	var decoded = jwt.verify(token, process.env.JWT_SECRET)
+	var userId = decoded.id
+	const userRequesting = await User.findById(userId)
+
 	if (user) {
 		user.name = req.body.name || user.name
 		user.email = req.body.email || user.email
-		user.isAdmin = req.body.isAdmin || user.isAdmin
+		if (userRequesting.isAdmin) {
+			user.isAdmin = req.body.isAdmin ? true : false
+		}
 		user.amap = req.body.amap || user.amap
 		if (req.body.password) {
 			user.password = req.body.password
@@ -132,7 +142,6 @@ const updateUser = async (req, res) => {
 			email: updatedUser.email,
 			amap: updatedUser.amap,
 			isAdmin: updatedUser.isAdmin,
-			token: generateToken(updatedUser._id),
 		})
 	} else {
 		res.status(404).json({ message: 'Utilisateur introuvable' })
@@ -144,7 +153,11 @@ const updateUser = async (req, res) => {
 // @access  Private + Admin
 const deleteUser = async (req, res) => {
 	const user = await User.findById(req.query.id)
-
+	await Order.find({ client: req.query.id }).then((results) => {
+		return results.map(async (order) => {
+			return await order.remove()
+		})
+	})
 	if (user) {
 		user.remove()
 		res.json({ message: 'Utilisateur supprimé' })
