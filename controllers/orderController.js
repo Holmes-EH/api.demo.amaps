@@ -1,5 +1,6 @@
 import Order from '@/models/orderModel'
 import jwt from 'jsonwebtoken'
+import { buildEmailData, sendEmail } from '@/lib/sendmail'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -26,6 +27,13 @@ const newOrder = async (req, res) => {
 		})
 
 		if (order) {
+			const emailData = await buildEmailData({
+				client,
+				details,
+				amap,
+				session,
+			})
+			await sendEmail(emailData)
 			res.status(201).json({
 				_id: order._id,
 				client: order.client,
