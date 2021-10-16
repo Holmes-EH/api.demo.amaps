@@ -76,6 +76,7 @@ const updateProduct = async (req, res) => {
 		product.title = req.body.title || product.title
 		product.pricePerKg = req.body.pricePerKg || product.pricePerKg
 		product.isAvailable = req.body.isAvailable ? true : false
+		product.unitOnly = req.body.unitOnly ? true : false
 
 		const updatedProduct = await product.save()
 		res.json({
@@ -83,6 +84,7 @@ const updateProduct = async (req, res) => {
 			title: updatedProduct.title,
 			pricePerKg: updatedProduct.pricePerKg,
 			isAvailable: updatedProduct.isAvailable,
+			unitOnly: updatedProduct.unitOnly,
 		})
 	} else {
 		res.status(404).json({

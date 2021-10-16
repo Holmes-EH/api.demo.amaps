@@ -13,6 +13,10 @@ const productSchema = mongoose.Schema({
 		type: Boolean,
 		default: true,
 	},
+	unitOnly: {
+		type: Boolean,
+		default: false,
+	},
 })
 
 module.exports =
