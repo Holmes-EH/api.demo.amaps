@@ -1,5 +1,7 @@
 import Order from '@/models/orderModel'
 import Product from '@/models/productModel'
+import Amap from '@/models/amapModel'
+import User from '@/models/userModel'
 import OrderRecap from '@/models/orderRecapModel'
 import jwt from 'jsonwebtoken'
 import { buildEmailData, sendEmail } from '@/lib/sendmail'
@@ -189,8 +191,8 @@ const getAllOrdersBySession = async (req, res) => {
 				Product,
 			},
 		})
-		.populate({ path: 'amap', select: ['name', 'groupement'] })
-		.populate({ path: 'client', select: ['name'] })
+		.populate({ path: 'amap', select: ['name', 'groupement'] }, Amap)
+		.populate({ path: 'client', select: ['name'] }, User)
 		.sort({ amap: 'asc' })
 		.limit(pageSize)
 		.skip(pageSize * (page - 1))
