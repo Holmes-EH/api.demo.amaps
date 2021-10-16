@@ -18,12 +18,12 @@ const protect = async (req, res, next) => {
 
 			next()
 		} catch (error) {
-			res.status(401).json({ error: 'Non autorisé, token failed' })
+			res.status(401).json({ message: 'Non autorisé, token failed' })
 		}
 	}
 
 	if (!token) {
-		res.status(401).json({ error: 'Non autorisé, pas de token' })
+		res.status(401).json({ message: 'Non autorisé, pas de token' })
 	}
 }
 
