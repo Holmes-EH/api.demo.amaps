@@ -1,5 +1,6 @@
 import User from '@/models/userModel.js'
 import Order from '@/models/orderModel.js'
+import Amap from '@/models/amapModel.js'
 import generateToken from '../utils/generateToken.js'
 import jwt from 'jsonwebtoken'
 
@@ -102,7 +103,7 @@ const getAllUsers = async (req, res) => {
 	const users = await User.find({ ...keyword })
 		.select('-password')
 		.sort({ name: 'asc' })
-		.populate({ path: 'amap', select: ['name', 'groupement'] })
+		.populate({ path: 'amap', select: ['name', 'groupement'], model: Amap })
 		.limit(pageSize)
 		.skip(pageSize * (page - 1))
 	if (users) {
