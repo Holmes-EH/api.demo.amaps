@@ -1,4 +1,6 @@
 import Order from '@/models/orderModel'
+import Product from '@/models/productModel'
+import OrderRecap from '@/models/orderRecapModel'
 import jwt from 'jsonwebtoken'
 import { buildEmailData, sendEmail } from '@/lib/sendmail'
 
@@ -11,7 +13,6 @@ dbConnect()
 // @access  Private
 const newOrder = async (req, res) => {
 	const { client, details, amap, session } = req.body
-
 	const orderExists = await Order.findOne({ client, session })
 
 	if (orderExists) {
@@ -27,6 +28,23 @@ const newOrder = async (req, res) => {
 		})
 
 		if (order) {
+			const orderRecapExists = await OrderRecap.findOne({ amap, session })
+			if (orderRecapExists) {
+				orderRecapExists.products.map((product) => {
+					let detailToUpdate = order.details.filter((detail) =>
+						detail.product.equals(product.product)
+					)
+					product.quantity += detailToUpdate[0].quantity
+					// Todo : insert non existing product yet in recap
+				})
+				await orderRecapExists.save()
+			} else {
+				await OrderRecap.create({
+					products: details,
+					session,
+					amap,
+				})
+			}
 			order = await order.populate('details.product')
 
 			const emailData = await buildEmailData({
@@ -35,7 +53,7 @@ const newOrder = async (req, res) => {
 				amap: order.amap,
 				session: order.session,
 			})
-			sendEmail(emailData)
+			// sendEmail(emailData)
 			res.status(201).json({
 				_id: order._id,
 				client: order.client,
@@ -49,7 +67,7 @@ const newOrder = async (req, res) => {
 	}
 }
 
-// @desc    Get orders
+// @desc    Get order by id
 // @route   Get /api/orders/id
 // @access  Private
 const getSingleOrder = async (req, res) => {
@@ -78,7 +96,7 @@ const getSingleOrder = async (req, res) => {
 	}
 }
 
-// @desc    Get orders
+// @desc    Get users last 10 orders
 // @route   Get /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
@@ -106,7 +124,7 @@ const getMyOrders = async (req, res) => {
 	}
 }
 
-// @desc    Get orders
+// @desc    Get all orders
 // @route   Get /api/orders
 // @access  Private + admin
 const getAllOrders = async (req, res) => {
@@ -152,7 +170,7 @@ const getAllOrders = async (req, res) => {
 	}
 }
 
-// @desc    Get orders
+// @desc    Get all orders by session
 // @route   Get /api/orders/session
 // @access  Private + admin
 const getAllOrdersBySession = async (req, res) => {
@@ -168,6 +186,7 @@ const getAllOrdersBySession = async (req, res) => {
 			populate: {
 				path: 'product',
 				select: ['_id', 'title', 'pricePerKg'],
+				Product,
 			},
 		})
 		.populate({ path: 'amap', select: ['name', 'groupement'] })
