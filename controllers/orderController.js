@@ -19,7 +19,7 @@ const newOrder = async (req, res) => {
 			mesage: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 		})
 	} else {
-		const order = await Order.create({
+		let order = await Order.create({
 			client,
 			details,
 			amap,
@@ -27,13 +27,15 @@ const newOrder = async (req, res) => {
 		})
 
 		if (order) {
+			order = await order.populate('details.product')
+
 			const emailData = await buildEmailData({
-				client,
-				details,
-				amap,
-				session,
+				client: order.client,
+				details: order.details,
+				amap: order.amap,
+				session: order.session,
 			})
-			await sendEmail(emailData)
+			sendEmail(emailData)
 			res.status(201).json({
 				_id: order._id,
 				client: order.client,
