@@ -61,13 +61,13 @@ const newOrder = async (req, res) => {
 			}
 			order = await order.populate('details.product')
 
-			// const emailData = await buildEmailData({
-			// 	client: order.client,
-			// 	details: order.details,
-			// 	amap: order.amap,
-			// 	session: order.session,
-			// })
-			// sendEmail(emailData)
+			const emailData = await buildEmailData({
+				client: order.client,
+				details: order.details,
+				amap: order.amap,
+				session: order.session,
+			})
+			sendEmail(emailData)
 			res.status(201).json({
 				_id: order._id,
 				client: order.client,
