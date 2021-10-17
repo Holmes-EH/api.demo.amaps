@@ -249,9 +249,7 @@ const updateOrder = async (req, res) => {
 			session: order.session,
 		})
 		if (orderRecapExists) {
-			let productList = []
 			orderRecapExists.products.map((product) => {
-				productList.push(product.product.toString())
 				let detailToUpdate = order.details.filter((detail) =>
 					detail.product._id.equals(product.product)
 				)
@@ -259,8 +257,6 @@ const updateOrder = async (req, res) => {
 					product.quantity -= detailToUpdate[0].quantity
 				}
 			})
-
-			await orderRecapExists.save()
 		}
 
 		order.paid = req.body.order.paid ? true : false
@@ -282,7 +278,7 @@ const updateOrder = async (req, res) => {
 			})
 			.populate({ path: 'client', select: ['name'], model: User })
 
-		// Now add new order details to recap
+		// Now add updated order details to recap
 		if (orderRecapExists) {
 			let productList = []
 			orderRecapExists.products.map((product) => {
@@ -292,12 +288,11 @@ const updateOrder = async (req, res) => {
 				)
 				if (detailToUpdate.length > 0) {
 					product.quantity += detailToUpdate[0].quantity
-				} else {
-					updatedOrder.details.map((detail) => {
-						if (!productList.includes(detail.product.toString())) {
-							orderRecapExists.products.push(detail)
-						}
-					})
+				}
+			})
+			updatedOrder.details.map((detail) => {
+				if (!productList.includes(detail.product._id.toString())) {
+					orderRecapExists.products.push(detail)
 				}
 			})
 
@@ -330,6 +325,44 @@ const deleteOrder = async (req, res) => {
 	}
 }
 
+// @desc    Get all orders by session
+// @route   Get /api/recaps?session
+// @access  Private + admin
+const getRecapsBySession = async (req, res) => {
+	const pageSize = 10
+	const page = Number(req.query.pageNumber) || 1
+
+	const count = await OrderRecap.countDocuments({
+		session: req.query.session,
+	})
+	const sessionRecaps = await OrderRecap.find({ session: req.query.session })
+		.populate({
+			path: 'products',
+			populate: {
+				path: 'product',
+				select: ['_id', 'title', 'pricePerKg'],
+				model: Product,
+			},
+		})
+		.populate({
+			path: 'amap',
+			select: ['name', 'groupement'],
+			model: Amap,
+		})
+		.sort({ amap: 'asc' })
+		.limit(pageSize)
+		.skip(pageSize * (page - 1))
+	if (sessionRecaps) {
+		res.status(200).json({
+			sessionRecaps,
+			page,
+			pages: Math.ceil(count / pageSize),
+		})
+	} else {
+		res.status(404).json({ message: 'Aucun récapitulatif trouvé' })
+	}
+}
+
 export {
 	newOrder,
 	getSingleOrder,
@@ -338,4 +371,5 @@ export {
 	getMyOrders,
 	updateOrder,
 	deleteOrder,
+	getRecapsBySession,
 }
