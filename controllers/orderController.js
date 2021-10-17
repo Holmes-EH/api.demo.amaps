@@ -243,6 +243,26 @@ const getAllOrdersBySession = async (req, res) => {
 const updateOrder = async (req, res) => {
 	const order = await Order.findById(req.body.order._id)
 	if (order) {
+		// First subtract old order from recap
+		const orderRecapExists = await OrderRecap.findOne({
+			amap: order.amap,
+			session: order.session,
+		})
+		if (orderRecapExists) {
+			let productList = []
+			orderRecapExists.products.map((product) => {
+				productList.push(product.product.toString())
+				let detailToUpdate = order.details.filter((detail) =>
+					detail.product._id.equals(product.product)
+				)
+				if (detailToUpdate.length > 0) {
+					product.quantity -= detailToUpdate[0].quantity
+				}
+			})
+
+			await orderRecapExists.save()
+		}
+
 		order.paid = req.body.order.paid ? true : false
 		order.details = req.body.order.details || order.details
 		const newOrder = await order.save()
@@ -251,7 +271,7 @@ const updateOrder = async (req, res) => {
 				path: 'details',
 				populate: {
 					path: 'product',
-					select: ['title', 'pricePerKg'],
+					select: ['_id', 'title', 'pricePerKg'],
 					model: Product,
 				},
 			})
@@ -261,6 +281,28 @@ const updateOrder = async (req, res) => {
 				model: Amap,
 			})
 			.populate({ path: 'client', select: ['name'], model: User })
+
+		// Now add new order details to recap
+		if (orderRecapExists) {
+			let productList = []
+			orderRecapExists.products.map((product) => {
+				productList.push(product.product.toString())
+				let detailToUpdate = updatedOrder.details.filter((detail) =>
+					detail.product._id.equals(product.product)
+				)
+				if (detailToUpdate.length > 0) {
+					product.quantity += detailToUpdate[0].quantity
+				} else {
+					updatedOrder.details.map((detail) => {
+						if (!productList.includes(detail.product.toString())) {
+							orderRecapExists.products.push(detail)
+						}
+					})
+				}
+			})
+
+			await orderRecapExists.save()
+		}
 
 		res.status(200).json({
 			_id: updatedOrder._id,
