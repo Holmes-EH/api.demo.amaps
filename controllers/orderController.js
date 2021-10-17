@@ -1,5 +1,7 @@
 import Order from '@/models/orderModel'
 import Product from '@/models/productModel'
+import Amap from '@/models/amapModel'
+import User from '@/models/userModel'
 import OrderRecap from '@/models/orderRecapModel'
 import jwt from 'jsonwebtoken'
 import { buildEmailData, sendEmail } from '@/lib/sendmail'
@@ -9,7 +11,7 @@ import dbConnect from '@/lib/dbConnect.js'
 dbConnect()
 
 // @desc    Add a new order
-// @route   POST /api/order
+// @route   POST /api/orders
 // @access  Private
 const newOrder = async (req, res) => {
 	const { client, details, amap, session } = req.body
@@ -30,18 +32,25 @@ const newOrder = async (req, res) => {
 		if (order) {
 			const orderRecapExists = await OrderRecap.findOne({ amap, session })
 			if (orderRecapExists) {
+				let productList = []
 				orderRecapExists.products.map((product) => {
+					productList.push(product.product.toString())
 					let detailToUpdate = order.details.filter((detail) =>
 						detail.product.equals(product.product)
 					)
-					product.quantity += detailToUpdate[0].quantity
-					let detailToInsert = order.details.filter((detail) => {
-						!detail.product.equals(product.product)
-					})
-					if (detailToInsert !== []) {
-						orderRecapExists.products.push(detailToInsert[0])
+					if (detailToUpdate.length > 0) {
+						product.quantity += detailToUpdate[0].quantity
+					} else {
+						order.details.map((detail) => {
+							if (
+								!productList.includes(detail.product.toString())
+							) {
+								orderRecapExists.products.push(detail)
+							}
+						})
 					}
 				})
+
 				await orderRecapExists.save()
 			} else {
 				await OrderRecap.create({
@@ -52,12 +61,12 @@ const newOrder = async (req, res) => {
 			}
 			order = await order.populate('details.product')
 
-			const emailData = await buildEmailData({
-				client: order.client,
-				details: order.details,
-				amap: order.amap,
-				session: order.session,
-			})
+			// const emailData = await buildEmailData({
+			// 	client: order.client,
+			// 	details: order.details,
+			// 	amap: order.amap,
+			// 	session: order.session,
+			// })
 			// sendEmail(emailData)
 			res.status(201).json({
 				_id: order._id,
@@ -82,9 +91,10 @@ const getSingleOrder = async (req, res) => {
 			populate: {
 				path: 'product',
 				select: ['title', 'pricePerKg'],
+				model: Product,
 			},
 		})
-		.populate({ path: 'amap', select: ['name', 'groupement'] })
+		.populate({ path: 'amap', select: ['name', 'groupement'], model: Amap })
 
 	if (order) {
 		res.status(200).json({
@@ -114,9 +124,10 @@ const getMyOrders = async (req, res) => {
 			populate: {
 				path: 'product',
 				select: ['title', 'pricePerKg'],
+				model: Product,
 			},
 		})
-		.populate({ path: 'amap', select: ['name', 'groupement'] })
+		.populate({ path: 'amap', select: ['name', 'groupement'], model: Amap })
 
 	if (userOrders) {
 		res.status(200).json({
@@ -144,9 +155,14 @@ const getAllOrders = async (req, res) => {
 				populate: {
 					path: 'product',
 					select: ['title', 'pricePerKg'],
+					model: Product,
 				},
 			})
-			.populate({ path: 'amap', select: ['name', 'groupement'] })
+			.populate({
+				path: 'amap',
+				select: ['name', 'groupement'],
+				model: Amap,
+			})
 			.sort({ session: 'asc' })
 		if (allOrders) {
 			res.status(200).json({
@@ -161,9 +177,15 @@ const getAllOrders = async (req, res) => {
 				path: 'details',
 				populate: {
 					path: 'product',
+					select: ['title', 'pricePerKg'],
+					model: Product,
 				},
 			})
-			.populate({ path: 'amap', select: ['name', 'groupement'] })
+			.populate({
+				path: 'amap',
+				select: ['name', 'groupement'],
+				model: Amap,
+			})
 			.sort({ amap: 'asc' })
 		if (allOrders) {
 			res.status(200).json({
@@ -197,6 +219,7 @@ const getAllOrdersBySession = async (req, res) => {
 		.populate({
 			path: 'amap',
 			select: ['name', 'groupement'],
+			model: Amap,
 		})
 		.populate({ path: 'client', select: ['name'] })
 		.sort({ amap: 'asc' })
@@ -229,10 +252,15 @@ const updateOrder = async (req, res) => {
 				populate: {
 					path: 'product',
 					select: ['title', 'pricePerKg'],
+					model: Product,
 				},
 			})
-			.populate({ path: 'amap', select: ['name', 'groupement'] })
-			.populate({ path: 'client', select: ['name'] })
+			.populate({
+				path: 'amap',
+				select: ['name', 'groupement'],
+				model: Amap,
+			})
+			.populate({ path: 'client', select: ['name'], model: User })
 
 		res.status(200).json({
 			_id: updatedOrder._id,
