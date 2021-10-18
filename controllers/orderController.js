@@ -201,10 +201,6 @@ const getAllOrders = async (req, res) => {
 // @route   Get /api/orders/session
 // @access  Private + admin
 const getAllOrdersBySession = async (req, res) => {
-	const pageSize = 10
-	const page = Number(req.query.pageNumber) || 1
-
-	const count = await Order.countDocuments({ session: req.query.session })
 	const sessionOrders = await Order.find({
 		session: req.query.session,
 	})
@@ -223,14 +219,10 @@ const getAllOrdersBySession = async (req, res) => {
 		})
 		.populate({ path: 'client', select: ['name'] })
 		.sort({ amap: 'asc' })
-		.limit(pageSize)
-		.skip(pageSize * (page - 1))
 
 	if (sessionOrders) {
 		res.status(200).json({
 			sessionOrders,
-			page,
-			pages: Math.ceil(count / pageSize),
 		})
 	} else {
 		res.status(404).json({ message: 'Aucune commande trouvée' })
