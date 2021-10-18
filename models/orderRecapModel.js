@@ -22,6 +22,9 @@ const orderRecapSchema = mongoose.Schema({
 		ref: 'Amap',
 		required: true,
 	},
+	delivery: {
+		type: Date,
+	},
 })
 
 module.exports =

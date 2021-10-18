@@ -76,7 +76,7 @@ const newOrder = async (req, res) => {
 				session: order.session,
 			})
 		} else {
-			res.status(400).json({ message: 'Données de commande érronés' })
+			res.status(400).json({ message: 'Données de commande érronés.' })
 		}
 	}
 }
