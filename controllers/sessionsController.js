@@ -63,7 +63,7 @@ const getSessions = async (req, res) => {
 				receptionDate: foundSession[0].receptionDate,
 			})
 		} else {
-			res.status(200).json({ sessions: [] })
+			res.status(200).json([])
 		}
 	} else {
 		const sessions = await Session.find()
