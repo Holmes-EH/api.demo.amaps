@@ -145,25 +145,46 @@ const getMyOrders = async (req, res) => {
 // @access  Private + admin
 const getAllOrders = async (req, res) => {
 	const amap = req.query.amap
+	const session = req.query.session
 
 	// TODO : Implement pagination
 
-	if (amap) {
-		const allOrders = await Order.find({ amap })
-			.populate({
-				path: 'details',
-				populate: {
-					path: 'product',
-					select: ['title', 'pricePerKg'],
-					model: Product,
-				},
-			})
-			.populate({
-				path: 'amap',
-				select: ['name', 'groupement'],
-				model: Amap,
-			})
-			.sort({ session: 'asc' })
+	if (amap || session) {
+		let allOrders
+		if (amap && session) {
+			allOrders = await Order.find({ amap, session })
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (amap && !session) {
+			allOrders = await Order.find({ amap })
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		}
+
 		if (allOrders) {
 			res.status(200).json({
 				allOrders,
