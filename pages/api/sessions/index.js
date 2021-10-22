@@ -1,4 +1,8 @@
-import { addNewSession, getSessions } from '@/controllers/sessionsController'
+import {
+	addNewSession,
+	getSessions,
+	updateSession,
+} from '@/controllers/sessionsController'
 import nc from 'next-connect'
 import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
@@ -11,6 +15,9 @@ handler
 	})
 	.get(protect, async (req, res) => {
 		await getSessions(req, res)
+	})
+	.put(protect, admin, async (req, res) => {
+		await updateSession(req, res)
 	})
 
 export default allowCors(handler)

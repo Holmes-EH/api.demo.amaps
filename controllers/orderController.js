@@ -154,6 +154,11 @@ const getAllOrders = async (req, res) => {
 		if (amap && session) {
 			allOrders = await Order.find({ amap, session })
 				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
+				.populate({
 					path: 'details',
 					populate: {
 						path: 'product',

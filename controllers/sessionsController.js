@@ -78,4 +78,21 @@ const getSessions = async (req, res) => {
 	}
 }
 
-export { addNewSession, getSessions }
+// @desc    Update session by session
+// @route   put /api/sessions
+// @access  Private + admin
+const updateSession = async (req, res) => {
+	const session = await Session.findById(req.body._id)
+
+	if (session) {
+		session.isOpen = req.body.isOpen || session.isOpen
+		session.receptionDate = req.body.receptionDate || session.receptionDate
+
+		const updatedSession = await session.save()
+		res.status(200).json(updatedSession)
+	} else {
+		res.status(404).json({ message: 'Session introuvable...' })
+	}
+}
+
+export { addNewSession, getSessions, updateSession }
