@@ -10,7 +10,7 @@ import dbConnect from '@/lib/dbConnect.js'
 dbConnect()
 
 // @desc    Update Order details
-// @route   PUT /api/orders
+// @route   PUT /api/orders/recaps/update
 // @access  Private
 const updateRecapDeliveryDate = async (req, res) => {
 	const recap = await OrderRecap.findById(req.body._id)

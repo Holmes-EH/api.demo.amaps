@@ -1,4 +1,4 @@
-import { updateRecapDeliveryDate } from '@/controllers/orderRecpController'
+import { updateRecapDeliveryDate } from '@/controllers/orderRecapController'
 import nc from 'next-connect'
 import allowCors from '@/utils/allowCors'
 import { protect, admin } from '@/middleware/authMiddleware'
