@@ -7,12 +7,16 @@ const sessionSchema = mongoose.Schema(
 			unique: true,
 			required: true,
 		},
-		receptionDate: {
+		lastOrderDate: {
 			type: Date,
 		},
 		isOpen: {
 			type: Boolean,
 			default: false,
+		},
+		news: {
+			type: String,
+			default: '',
 		},
 	},
 	{

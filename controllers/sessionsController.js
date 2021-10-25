@@ -1,4 +1,7 @@
 import Session from '@/models/sessionModel'
+import Amap from '@/models/amapModel'
+import Product from '@/models/productModel'
+import OrderRecap from '@/models/orderRecapModel'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -22,11 +25,25 @@ const addNewSession = async (req, res) => {
 		})
 
 		if (newSession) {
+			const amaps = await Amap.find()
+			const products = await Product.find().sort('title').select('_id')
+			let productArray = []
+			products.forEach((product) => {
+				productArray.push({ product: product._id, quantity: 0 })
+			})
+			for (let index = 0; index < amaps.length; index++) {
+				await OrderRecap.create({
+					products: productArray,
+					session,
+					amap: amaps[index],
+				})
+			}
+
 			res.status(201).json({
 				_id: newSession._id,
 				session: newSession.session,
 				isOpen: newSession.isOpen,
-				receptionDate: newSession.receptionDate,
+				lastOrderDate: newSession.lastOrderDate,
 			})
 		} else {
 			res.status(400).json({ message: 'Données de session éronnées.' })
@@ -46,7 +63,8 @@ const getSessions = async (req, res) => {
 				_id: session._id,
 				session: session.session,
 				isOpen: session.isOpen,
-				receptionDate: session.receptionDate,
+				lastOrderDate: session.lastOrderDate,
+				news: session.news,
 			})
 		} else {
 			res.status(400).json({ message: 'Session introuvable...' })
@@ -60,7 +78,8 @@ const getSessions = async (req, res) => {
 				_id: foundSession[0]._id,
 				session: foundSession[0].session,
 				isOpen: foundSession[0].isOpen,
-				receptionDate: foundSession[0].receptionDate,
+				lastOrderDate: foundSession[0].lastOrderDate,
+				news: foundSession[0].news,
 			})
 		} else {
 			res.status(200).json([])
@@ -86,7 +105,8 @@ const updateSession = async (req, res) => {
 
 	if (session) {
 		session.isOpen = req.body.isOpen || session.isOpen
-		session.receptionDate = req.body.receptionDate || session.receptionDate
+		session.lastOrderDate = req.body.lastOrderDate || session.lastOrderDate
+		session.news = req.body.news || session.news
 
 		const updatedSession = await session.save()
 		res.status(200).json(updatedSession)
