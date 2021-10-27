@@ -1,5 +1,6 @@
 import {
 	addNewSession,
+	deleteSession,
 	getSessions,
 	updateSession,
 } from '@/controllers/sessionsController'
@@ -18,6 +19,9 @@ handler
 	})
 	.put(protect, admin, async (req, res) => {
 		await updateSession(req, res)
+	})
+	.delete(protect, admin, async (req, res) => {
+		await deleteSession(req, res)
 	})
 
 export default allowCors(handler)
