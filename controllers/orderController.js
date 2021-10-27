@@ -144,14 +144,23 @@ const getMyOrders = async (req, res) => {
 // @route   Get /api/orders
 // @access  Private + admin
 const getAllOrders = async (req, res) => {
-	const amap = req.query.amap
-	const session = req.query.session
+	const { amap, session, clientName } = req.query
 
-	// TODO : Implement pagination
-
-	if (amap || session) {
+	if (amap || session || clientName) {
+		let requestedClient
+		if (clientName) {
+			const keyword = clientName
+				? {
+						name: {
+							$regex: clientName,
+							$options: 'i',
+						},
+				  }
+				: {}
+			requestedClient = await User.find({ ...keyword })
+		}
 		let allOrders
-		if (amap && session) {
+		if (amap && session && !requestedClient) {
 			allOrders = await Order.find({ amap, session })
 				.populate({
 					path: 'client',
@@ -172,8 +181,120 @@ const getAllOrders = async (req, res) => {
 					model: Amap,
 				})
 				.sort({ session: 'asc' })
-		} else if (amap && !session) {
+		} else if (amap && session && requestedClient) {
+			allOrders = await Order.find({
+				amap,
+				session,
+				client: requestedClient,
+			})
+				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (amap && requestedClient && !session) {
+			allOrders = await Order.find({ amap, requestedClient })
+				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (amap && !requestedClient && !session) {
 			allOrders = await Order.find({ amap })
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (session && requestedClient && !amap) {
+			allOrders = await Order.find({
+				session,
+				client: requestedClient,
+			})
+				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (session && !requestedClient && !amap) {
+			allOrders = await Order.find({ session })
+				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
+				.populate({
+					path: 'details',
+					populate: {
+						path: 'product',
+						select: ['title', 'pricePerKg'],
+						model: Product,
+					},
+				})
+				.populate({
+					path: 'amap',
+					select: ['name', 'groupement'],
+					model: Amap,
+				})
+				.sort({ session: 'asc' })
+		} else if (requestedClient && !session && !amap) {
+			allOrders = await Order.find({ client: requestedClient })
+				.populate({
+					path: 'client',
+					select: ['name'],
+					model: User,
+				})
 				.populate({
 					path: 'details',
 					populate: {

@@ -101,7 +101,7 @@ const deleteAmap = async (req, res) => {
 	const amap = await Amap.findById(req.query.id)
 
 	if (amap) {
-		amap.remove()
+		await amap.remove()
 		res.json({ message: 'Amap supprimée' })
 	} else {
 		res.status(404).json({ message: 'Amap introuvable' })
