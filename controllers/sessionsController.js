@@ -32,11 +32,17 @@ const addNewSession = async (req, res) => {
 				productArray.push({ product: product._id, quantity: 0 })
 			})
 			for (let index = 0; index < amaps.length; index++) {
-				await OrderRecap.create({
-					products: productArray,
-					session,
+				let orderRecapExists = await OrderRecap.findOne({
 					amap: amaps[index],
+					session,
 				})
+				if (!orderRecapExists) {
+					await OrderRecap.create({
+						products: productArray,
+						session,
+						amap: amaps[index],
+					})
+				}
 			}
 
 			res.status(201).json({
@@ -115,4 +121,17 @@ const updateSession = async (req, res) => {
 	}
 }
 
-export { addNewSession, getSessions, updateSession }
+// @desc    Delete session by session
+// @route   put /api/sessions
+// @access  Private + admin
+const deleteSession = async (req, res) => {
+	const session = await Session.findById(req.body._id)
+	if (session) {
+		await session.remove()
+		res.status(200).json({ message: 'Commandes désautorisées.' })
+	} else {
+		res.status(404).json({ message: 'Aucune session trouvée...' })
+	}
+}
+
+export { addNewSession, getSessions, updateSession, deleteSession }
