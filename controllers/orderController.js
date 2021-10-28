@@ -32,22 +32,12 @@ const newOrder = async (req, res) => {
 		if (order) {
 			const orderRecapExists = await OrderRecap.findOne({ amap, session })
 			if (orderRecapExists) {
-				let productList = []
-				orderRecapExists.products.map((product) => {
-					productList.push(product.product.toString())
+				orderRecapExists.products.forEach((product) => {
 					let detailToUpdate = order.details.filter((detail) =>
 						detail.product.equals(product.product)
 					)
 					if (detailToUpdate.length > 0) {
 						product.quantity += detailToUpdate[0].quantity
-					} else {
-						order.details.map((detail) => {
-							if (
-								!productList.includes(detail.product.toString())
-							) {
-								orderRecapExists.products.push(detail)
-							}
-						})
 					}
 				})
 
@@ -457,7 +447,23 @@ const updateOrder = async (req, res) => {
 const deleteOrder = async (req, res) => {
 	const order = await Order.findById(req.query.id)
 	if (order) {
-		order.remove()
+		// First subtract old order from recap
+		const orderRecapExists = await OrderRecap.findOne({
+			amap: order.amap,
+			session: order.session,
+		})
+		if (orderRecapExists) {
+			orderRecapExists.products.map((product) => {
+				let detailToUpdate = order.details.filter((detail) =>
+					detail.product.equals(product.product)
+				)
+				if (detailToUpdate.length > 0) {
+					product.quantity -= detailToUpdate[0].quantity
+				}
+			})
+		}
+		await orderRecapExists.save()
+		await order.remove()
 		res.json({ message: 'Commande supprimée' })
 	} else {
 		res.status(404).json({ message: 'Commande introuvable...' })
