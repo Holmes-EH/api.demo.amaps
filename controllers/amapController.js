@@ -8,7 +8,7 @@ dbConnect()
 // @route   POST /api/amaps
 // @access  Private + Admin
 const registerAmap = async (req, res) => {
-	const { name, contact, groupement } = req.body
+	const { name, contact, groupement, deliveryDay, deliveryTime } = req.body
 
 	const amapExists = await Amap.findOne({ name })
 
@@ -21,6 +21,8 @@ const registerAmap = async (req, res) => {
 			name,
 			contact,
 			groupement,
+			deliveryDay,
+			deliveryTime,
 			accessCode,
 		})
 
@@ -30,6 +32,8 @@ const registerAmap = async (req, res) => {
 				name: amap.name,
 				contact: amap.contact,
 				groupement: amap.groupement,
+				deliveryDay: amap.deliveryDay,
+				deliveryTime: amap.deliveryTime,
 				accessCode: amap.accessCode,
 			})
 		} else {
@@ -61,6 +65,8 @@ const getAmapDetails = async (req, res) => {
 			name: amap.name,
 			contact: amap.contact,
 			groupement: amap.groupement,
+			deliveryDay: amap.deliveryDay,
+			deliveryTime: amap.deliveryTime,
 			accessCode: amap.accessCode,
 		})
 	} else {
@@ -78,6 +84,8 @@ const updateAmap = async (req, res) => {
 		amap.name = req.body.name || amap.name
 		amap.contact = req.body.contact || amap.contact
 		amap.groupement = req.body.groupement || amap.groupement
+		amap.deliveryDay = req.body.deliveryDay || amap.deliveryDay
+		amap.deliveryTime = req.body.deliveryTime || amap.deliveryTime
 		if (req.body.updateAccessCode) {
 			amap.accessCode = await generateAccessCode(6)
 		}
@@ -87,6 +95,8 @@ const updateAmap = async (req, res) => {
 			name: updatedAmap.name,
 			contact: updatedAmap.contact,
 			groupement: updatedAmap.groupement,
+			deliveryDay: amap.deliveryDay,
+			deliveryTime: amap.deliveryTime,
 			accessCode: updatedAmap.accessCode,
 		})
 	} else {

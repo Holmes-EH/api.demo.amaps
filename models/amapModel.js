@@ -25,6 +25,12 @@ const amapSchema = mongoose.Schema(
 			type: String,
 			unique: true,
 		},
+		deliveryDay: {
+			type: Number,
+		},
+		deliveryTime: {
+			type: String,
+		},
 		accessCode: {
 			type: String,
 			required: true,
