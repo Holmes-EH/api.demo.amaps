@@ -247,6 +247,23 @@ const sendMailToAmap = async (req, res) => {
 	}
 }
 
+// @desc    Check amap access code sent in body
+// @route   POST /api/amaps/access
+// @access  Public
+const checkAmapCode = async (req, res) => {
+	const amap = await Amap.findOne({ accessCode: req.body.amapCode }).select([
+		'_id',
+		'name',
+	])
+	if (amap) {
+		res.status(200).json(amap)
+	} else {
+		res.status(404).json({
+			message: 'Code amap erroné.\nAucune amap trouvée...',
+		})
+	}
+}
+
 export {
 	registerAmap,
 	getAllAmaps,
@@ -254,4 +271,5 @@ export {
 	updateAmap,
 	deleteAmap,
 	sendMailToAmap,
+	checkAmapCode,
 }
