@@ -25,6 +25,10 @@ const orderRecapSchema = mongoose.Schema({
 	delivery: {
 		type: Date,
 	},
+	notificationSent: {
+		type: Boolean,
+		default: false,
+	},
 })
 
 module.exports =

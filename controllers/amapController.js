@@ -1,8 +1,21 @@
 import Amap from '@/models/amapModel'
+import Product from '@/models/productModel'
+import OrderRecap from '@/models/orderRecapModel'
+import Session from '@/models/sessionModel'
 import dbConnect from '@/lib/dbConnect.js'
 import generateAccessCode from '@/utils/generateAccessCode'
+import { sendEmail } from '@/lib/sendmail'
 
 dbConnect()
+
+const elision = (productTitle) => {
+	const vowels = ['a', 'e', 'i', 'o', 'u', 'y', 'h']
+	if (vowels.includes(productTitle.slice(0, 1).toLowerCase())) {
+		return `d'${productTitle.toLowerCase()}`
+	} else {
+		return `de ${productTitle.toLowerCase()}`
+	}
+}
 
 // @desc    Register a new amap
 // @route   POST /api/amaps
@@ -118,4 +131,127 @@ const deleteAmap = async (req, res) => {
 	}
 }
 
-export { registerAmap, getAllAmaps, getAmapDetails, updateAmap, deleteAmap }
+// @desc    Send mail to amap
+// @route   POST /api/amaps/sendMail
+// @access  Private + Admin
+const sendMailToAmap = async (req, res) => {
+	const { amapId, news, sessionId } = req.body
+	const amap = await Amap.findById(amapId)
+	const sessionDetails = await Session.findById(sessionId)
+	if (amap) {
+		const orderRecap = await OrderRecap.findOne({
+			amap: amapId,
+			session: sessionDetails.session,
+		})
+			.populate({
+				path: 'products',
+				populate: {
+					path: 'product',
+					select: ['_id', 'title', 'pricePerKg'],
+					model: Product,
+				},
+			})
+			.populate({
+				path: 'amap',
+				select: ['name', 'groupement'],
+				model: Amap,
+			})
+		let textToSend = `
+            Bonjour !\n
+            Je vous écris pour vous signaler que vos adhérents peuvent désormais passer leur commande d'agrumes sur juju2fruits.com pour le mois ${elision(
+				new Date(
+					sessionDetails.session.toString().substr(-2, 2)
+				).toLocaleDateString('fr-FR', {
+					month: 'long',
+				})
+			)} jusqu'au ${sessionDetails.lastOrderDate.toLocaleDateString(
+			'fr-FR',
+			{
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+			}
+		)} pour une distribution le ${orderRecap.delivery.toLocaleDateString(
+			'fr-FR',
+			{ weekday: 'long', day: 'numeric', month: 'long' }
+		)}.\n
+        `
+		if (news.length > 0) {
+			textToSend += `
+                Quelques infos :\n
+                ${news}
+            `
+		}
+		let htmlToSend = `
+            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+            <html>
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                </head>
+                <body>
+                    <p>
+                        Bonjour.
+                    </p>
+                    <p>
+                        Je vous écris pour vous signaler que vos adhérents peuvent désormais passer leur commande d'agrumes sur juju2fruits.com pour le mois 
+                        ${elision(
+							new Date(
+								sessionDetails.session.toString().substr(-2, 2)
+							).toLocaleDateString('fr-FR', {
+								month: 'long',
+							})
+						)} jusqu'au ${sessionDetails.lastOrderDate.toLocaleDateString(
+			'fr-FR',
+			{
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+			}
+		)} pour une distribution le ${orderRecap.delivery.toLocaleDateString(
+			'fr-FR',
+			{ weekday: 'long', day: 'numeric', month: 'long' }
+		)}.
+                    </p>
+        `
+		if (news.length > 0) {
+			htmlToSend += `
+                <p>
+                    Quelques infos :<br />
+                    ${news.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                </p>
+            `
+		}
+
+		htmlToSend += `
+                    </body>
+                </html>
+            `
+		let mailData = {
+			from: '"Juju 2 Fruits" <juju2fruits64@gmail.com>',
+			to: 'holmes.samuel@protonmail.com',
+			subject: `Ouverture des commandes d'agrumes sur juju2fruits pour le mois ${elision(
+				new Date(
+					sessionDetails.session.toString().substr(-2, 2)
+				).toLocaleDateString('fr-FR', { month: 'long' })
+			)}`,
+			text: textToSend,
+			html: htmlToSend,
+		}
+		await sendEmail(mailData)
+		orderRecap.notificationSent = true
+		await orderRecap.save()
+		res.status(200).json({ message: 'Email Envoyé !', orderRecap })
+	} else {
+		res.status(404).json({ message: 'Amap introuvable...' })
+	}
+}
+
+export {
+	registerAmap,
+	getAllAmaps,
+	getAmapDetails,
+	updateAmap,
+	deleteAmap,
+	sendMailToAmap,
+}
