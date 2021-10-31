@@ -12,7 +12,8 @@ dbConnect()
 // @route   POST /api/users
 // @access  Public
 const registerUser = async (req, res) => {
-	const { name, email, isAdmin, amap, password } = req.body
+	const { name, email, amap, password } = req.body
+	const isAdmin = req.body.isAdmin || false
 
 	const userExists = await User.findOne({ email })
 
