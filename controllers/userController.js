@@ -129,8 +129,14 @@ const updateUser = async (req, res) => {
 	if (user) {
 		user.name = req.body.name || user.name
 		user.email = req.body.email || user.email
-		if (userRequesting.isAdmin) {
+
+		if (userRequesting.isAdmin && !user._id.equals(userRequesting._id)) {
 			user.isAdmin = req.body.isAdmin ? true : false
+		} else if (
+			userRequesting.isAdmin &&
+			user._id.equals(userRequesting._id)
+		) {
+			user.isAdmin = true
 		}
 		user.amap = req.body.amap || user.amap
 		if (req.body.password) {
@@ -144,6 +150,7 @@ const updateUser = async (req, res) => {
 			email: updatedUser.email,
 			amap: updatedUser.amap,
 			isAdmin: updatedUser.isAdmin,
+			token,
 		})
 	} else {
 		res.status(404).json({ message: 'Utilisateur introuvable' })

@@ -17,56 +17,68 @@ const newOrder = async (req, res) => {
 	const { client, details, amap, session } = req.body
 	const orderExists = await Order.findOne({ client, session })
 
-	if (orderExists) {
-		res.status(400).json({
-			message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
+	if (amap === '6180122c4a7daad398906d6c') {
+		res.status(401).json({
+			message:
+				"Tu fais partie de l'Amap des Admins, tu ne peux placer une commande...",
 		})
 	} else {
-		let order = await Order.create({
-			client,
-			details,
-			amap,
-			session,
-		})
-
-		if (order) {
-			const orderRecapExists = await OrderRecap.findOne({ amap, session })
-			if (orderRecapExists) {
-				orderRecapExists.products.forEach((product) => {
-					let detailToUpdate = order.details.filter((detail) =>
-						detail.product.equals(product.product)
-					)
-					if (detailToUpdate.length > 0) {
-						product.quantity += detailToUpdate[0].quantity
-					}
-				})
-
-				await orderRecapExists.save()
-			} else {
-				await OrderRecap.create({
-					products: details,
-					session,
-					amap,
-				})
-			}
-			order = await order.populate('details.product')
-
-			const emailData = await buildEmailData({
-				client: order.client,
-				details: order.details,
-				amap: order.amap,
-				session: order.session,
-			})
-			sendEmail(emailData)
-			res.status(201).json({
-				_id: order._id,
-				client: order.client,
-				details: order.details,
-				amap: order.amap,
-				session: order.session,
+		if (orderExists) {
+			res.status(400).json({
+				message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 			})
 		} else {
-			res.status(400).json({ message: 'Données de commande érronés.' })
+			let order = await Order.create({
+				client,
+				details,
+				amap,
+				session,
+			})
+
+			if (order) {
+				const orderRecapExists = await OrderRecap.findOne({
+					amap,
+					session,
+				})
+				if (orderRecapExists) {
+					orderRecapExists.products.forEach((product) => {
+						let detailToUpdate = order.details.filter((detail) =>
+							detail.product.equals(product.product)
+						)
+						if (detailToUpdate.length > 0) {
+							product.quantity += detailToUpdate[0].quantity
+						}
+					})
+
+					await orderRecapExists.save()
+				} else {
+					await OrderRecap.create({
+						products: details,
+						session,
+						amap,
+					})
+				}
+				order = await order.populate('details.product')
+
+				const emailData = await buildEmailData({
+					client: order.client,
+					details: order.details,
+					amap: order.amap,
+					session: order.session,
+				})
+				sendEmail(emailData)
+				res.status(201).json({
+					_id: order._id,
+					client: order.client,
+					details: order.details,
+					amap: order.amap,
+					session: order.session,
+				})
+			} else {
+				res.status(400).json({
+					message: 'Données de commande érronés.',
+				})
+			}
 		}
 	}
 }
@@ -105,11 +117,12 @@ const getSingleOrder = async (req, res) => {
 // @route   Get /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
+	const limit = req.query.limit || 1
 	const token = req.headers.authorization.split(' ')[1]
 	const decoded = jwt.verify(token, process.env.JWT_SECRET)
 	const userOrders = await Order.find({ client: decoded.id })
 		.sort({ session: 'desc' })
-		.limit(1)
+		.limit(limit)
 		.populate({
 			path: 'details',
 			populate: {
@@ -475,12 +488,6 @@ const deleteOrder = async (req, res) => {
 // @route   Get /api/orders/recaps?session
 // @access  Private + admin
 const getRecapsBySession = async (req, res) => {
-	const pageSize = 10
-	const page = Number(req.query.pageNumber) || 1
-
-	const count = await OrderRecap.countDocuments({
-		session: req.query.session,
-	})
 	const sessionRecaps = await OrderRecap.find({ session: req.query.session })
 		.populate({
 			path: 'products',
@@ -496,13 +503,9 @@ const getRecapsBySession = async (req, res) => {
 			model: Amap,
 		})
 		.sort({ amap: 'asc' })
-		.limit(pageSize)
-		.skip(pageSize * (page - 1))
 	if (sessionRecaps) {
 		res.status(200).json({
 			sessionRecaps,
-			page,
-			pages: Math.ceil(count / pageSize),
 		})
 	} else {
 		res.status(404).json({ message: 'Aucun récapitulatif trouvé' })
