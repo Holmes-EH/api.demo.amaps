@@ -19,7 +19,7 @@ const newOrder = async (req, res) => {
 
 	if (orderExists) {
 		res.status(400).json({
-			mesage: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
+			message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 		})
 	} else {
 		let order = await Order.create({
