@@ -471,7 +471,7 @@ const deleteOrder = async (req, res) => {
 }
 
 // @desc    Get all orders by session
-// @route   Get /api/recaps?session
+// @route   Get /api/orders/recaps?session
 // @access  Private + admin
 const getRecapsBySession = async (req, res) => {
 	const pageSize = 10
@@ -508,6 +508,21 @@ const getRecapsBySession = async (req, res) => {
 	}
 }
 
+// @desc    Get next delivery date per recap + amap
+// @route   Get /api/orders/recaps/nextdelivery
+// @access  Private
+const getNextDelivery = async (req, res) => {
+	const { session, amap } = req.query
+	const recapDelivery = await OrderRecap.findOne({ session, amap }).select(
+		'delivery'
+	)
+	if (recapDelivery) {
+		res.status(200).json(recapDelivery)
+	} else {
+		res.status(404).json({ message: 'Aucun récapitulatif trouvé..' })
+	}
+}
+
 export {
 	newOrder,
 	getSingleOrder,
@@ -517,4 +532,5 @@ export {
 	updateOrder,
 	deleteOrder,
 	getRecapsBySession,
+	getNextDelivery,
 }
