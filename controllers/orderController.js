@@ -101,14 +101,15 @@ const getSingleOrder = async (req, res) => {
 	}
 }
 
-// @desc    Get users last 10 orders
+// @desc    Get users last order
 // @route   Get /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
 	const token = req.headers.authorization.split(' ')[1]
 	const decoded = jwt.verify(token, process.env.JWT_SECRET)
 	const userOrders = await Order.find({ client: decoded.id })
-		.limit(10)
+		.sort({ session: 'desc' })
+		.limit(1)
 		.populate({
 			path: 'details',
 			populate: {
