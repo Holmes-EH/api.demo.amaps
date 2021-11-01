@@ -11,9 +11,9 @@ dbConnect()
 // @access  Public
 
 const getShortToken = async (req, res) => {
-	const { email } = req.body
+	const { email, amap } = req.body
 
-	const userExists = await User.findOne({ email })
+	const userExists = await User.findOne({ email, amap })
 
 	if (!userExists) {
 		res.status(404).json({
@@ -22,7 +22,7 @@ const getShortToken = async (req, res) => {
 		})
 	} else {
 		const resetPasswordEntry = await PasswordReset.create({
-			shortLivedToken: generateToken(userExists._id, '300s'),
+			shortLivedToken: generateToken(userExists._id, '120s'),
 			user: userExists._id,
 		})
 		if (resetPasswordEntry) {
@@ -30,7 +30,7 @@ const getShortToken = async (req, res) => {
 				_id: userExists._id,
 				name: userExists.name,
 				email: userExists.email,
-				token: resetPasswordEntry.shortLivedToken,
+				shortLivedToken: resetPasswordEntry.shortLivedToken,
 			})
 		}
 	}

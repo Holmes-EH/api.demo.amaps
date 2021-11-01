@@ -90,6 +90,22 @@ const getSessions = async (req, res) => {
 		} else {
 			res.status(200).json([])
 		}
+	} else if (req.query.current) {
+		const today = new Date()
+		const foundSession = await Session.find({
+			lastOrderDate: { $gte: today },
+		}).limit(1)
+		if (foundSession.length > 0) {
+			res.status(200).json({
+				_id: foundSession[0]._id,
+				session: foundSession[0].session,
+				isOpen: foundSession[0].isOpen,
+				lastOrderDate: foundSession[0].lastOrderDate,
+				news: foundSession[0].news,
+			})
+		} else {
+			res.status(200).json([])
+		}
 	} else {
 		const sessions = await Session.find()
 
