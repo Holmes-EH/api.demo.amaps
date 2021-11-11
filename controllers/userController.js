@@ -3,6 +3,7 @@ import Order from '@/models/orderModel.js'
 import Amap from '@/models/amapModel.js'
 import generateToken from '../utils/generateToken.js'
 import jwt from 'jsonwebtoken'
+import { sendEmail } from '@/lib/sendmail'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -129,6 +130,7 @@ const updateUser = async (req, res) => {
 	if (user) {
 		user.name = req.body.name || user.name
 		user.email = req.body.email || user.email
+		user.amap = req.body.amap || user.amap
 
 		if (userRequesting.isAdmin && !user._id.equals(userRequesting._id)) {
 			user.isAdmin = req.body.isAdmin ? true : false
@@ -175,4 +177,44 @@ const deleteUser = async (req, res) => {
 	}
 }
 
-export { registerUser, authUser, getUser, getAllUsers, updateUser, deleteUser }
+// @desc    Send a message to admin
+// @route   POST /api/users/sendmessage
+// @access  Private
+const sendMessage = async (req, res) => {
+	const { user, message } = req.body
+	try {
+		const emailData = {
+			from: `"${user.name}" <${user.email}>`,
+			replyTo: `"${user.name}" <${user.email}>`,
+			to: 'holmes.samuel@protonmail.com',
+			subject: `${user.name} depuis juju2fruits.com - ${message.object}`,
+			text: `${message.body}`,
+			html: `
+                <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+                <html>
+                    <head>
+                        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                    </head>
+                    <body>
+                        ${message.body.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                    </body>
+                    </html>
+                `,
+		}
+		sendEmail(emailData)
+		res.status(200).json({ message: 'Message envoyé.' })
+	} catch (error) {
+		res.status(401).json({ message: "Une erreur s'est produite..." })
+	}
+}
+
+export {
+	registerUser,
+	authUser,
+	getUser,
+	getAllUsers,
+	updateUser,
+	deleteUser,
+	sendMessage,
+}
