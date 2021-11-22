@@ -17,68 +17,61 @@ const newOrder = async (req, res) => {
 	const { client, details, amap, session } = req.body
 	const orderExists = await Order.findOne({ client, session })
 
-	if (amap === '6180122c4a7daad398906d6c') {
-		res.status(401).json({
-			message:
-				"Tu fais partie de l'Amap des Admins, tu ne peux placer une commande...",
+	if (orderExists) {
+		res.status(400).json({
+			message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 		})
 	} else {
-		if (orderExists) {
-			res.status(400).json({
-				message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
-			})
-		} else {
-			let order = await Order.create({
-				client,
-				details,
+		let order = await Order.create({
+			client,
+			details,
+			amap,
+			session,
+		})
+
+		if (order) {
+			const orderRecapExists = await OrderRecap.findOne({
 				amap,
 				session,
 			})
-
-			if (order) {
-				const orderRecapExists = await OrderRecap.findOne({
-					amap,
-					session,
+			if (orderRecapExists) {
+				orderRecapExists.products.forEach((product) => {
+					let detailToUpdate = order.details.filter((detail) =>
+						detail.product.equals(product.product)
+					)
+					if (detailToUpdate.length > 0) {
+						product.quantity += detailToUpdate[0].quantity
+					}
 				})
-				if (orderRecapExists) {
-					orderRecapExists.products.forEach((product) => {
-						let detailToUpdate = order.details.filter((detail) =>
-							detail.product.equals(product.product)
-						)
-						if (detailToUpdate.length > 0) {
-							product.quantity += detailToUpdate[0].quantity
-						}
-					})
 
-					await orderRecapExists.save()
-				} else {
-					await OrderRecap.create({
-						products: details,
-						session,
-						amap,
-					})
-				}
-				order = await order.populate('details.product')
-
-				const emailData = await buildEmailData({
-					client: order.client,
-					details: order.details,
-					amap: order.amap,
-					session: order.session,
-				})
-				sendEmail(emailData)
-				res.status(201).json({
-					_id: order._id,
-					client: order.client,
-					details: order.details,
-					amap: order.amap,
-					session: order.session,
-				})
+				await orderRecapExists.save()
 			} else {
-				res.status(400).json({
-					message: 'Données de commande érronés.',
+				await OrderRecap.create({
+					products: details,
+					session,
+					amap,
 				})
 			}
+			order = await order.populate('details.product')
+
+			const emailData = await buildEmailData({
+				client: order.client,
+				details: order.details,
+				amap: order.amap,
+				session: order.session,
+			})
+			sendEmail(emailData)
+			res.status(201).json({
+				_id: order._id,
+				client: order.client,
+				details: order.details,
+				amap: order.amap,
+				session: order.session,
+			})
+		} else {
+			res.status(400).json({
+				message: 'Données de commande érronés.',
+			})
 		}
 	}
 }
