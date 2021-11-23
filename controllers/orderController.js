@@ -57,7 +57,7 @@ const newOrder = async (req, res) => {
 			const emailData = await buildEmailData({
 				client: order.client,
 				details: order.details,
-				amap: order.amap,
+				amapId: order.amap,
 				session: order.session,
 			})
 			sendEmail(emailData)
@@ -403,7 +403,7 @@ const updateOrder = async (req, res) => {
 				path: 'details',
 				populate: {
 					path: 'product',
-					select: ['_id', 'title', 'pricePerKg'],
+					select: ['_id', 'title', 'pricePerKg', 'unitOnly'],
 					model: Product,
 				},
 			})
@@ -434,6 +434,14 @@ const updateOrder = async (req, res) => {
 
 			await orderRecapExists.save()
 		}
+
+		const emailData = await buildEmailData({
+			client: updatedOrder.client,
+			details: updatedOrder.details,
+			amapId: updatedOrder.amap,
+			session: updatedOrder.session,
+		})
+		sendEmail(emailData)
 
 		res.status(200).json({
 			_id: updatedOrder._id,
@@ -492,7 +500,13 @@ const getRecapsBySession = async (req, res) => {
 		})
 		.populate({
 			path: 'amap',
-			select: ['name', 'groupement'],
+			select: [
+				'name',
+				'groupement',
+				'deliveryDay',
+				'accessCode',
+				'deliveryTime',
+			],
 			model: Amap,
 		})
 		.sort({ amap: 'asc' })
