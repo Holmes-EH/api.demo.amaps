@@ -158,29 +158,42 @@ const sendMailToAmap = async (req, res) => {
 			})
 
 		let htmlToSend = `
-            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-            <html>
-                <head>
-                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-                </head>
-                <body>
-                    ${messageBody.replace(/(?:\r\n|\r|\n)/g, '<br>')}
-                </body>
-                </html>
-                
-        `
-		let mailData = {
-			from: '"Juju 2 Fruits" <juju2fruits64@gmail.com>',
-			to: 'holmes.samuel@protonmail.com',
-			subject: messageObject,
-			text: messageBody,
-			html: htmlToSend,
-		}
-		await sendEmail(mailData)
-		orderRecap.notificationSent = true
-		await orderRecap.save()
-		res.status(200).json({ message: 'Email Envoyé !', orderRecap })
+                <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+                <html>
+                    <head>
+                        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                    </head>
+                    <body>
+                        ${messageBody.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                    </body>
+                    </html>
+                    
+            `
+		let promiseArray = amap.contact.emails.map((email) => {
+			let mailData = {
+				from: `"Juju 2 Fruits" ${process.env.ADMIN_EMAIL}`,
+				to: email.email,
+				subject: messageObject,
+				text: messageBody,
+				html: htmlToSend,
+			}
+			return sendEmail(mailData)
+		})
+
+		Promise.all(promiseArray)
+			.then(async () => {
+				orderRecap.notificationSent = true
+				await orderRecap.save()
+				res.status(200).json({ message: 'Email Envoyé !', orderRecap })
+			})
+			.catch((error) => {
+				res.status(400).json({
+					message:
+						"Une erreur s'est produite lors de l'envoi des emails",
+					error: error.response,
+				})
+			})
 	} else {
 		res.status(404).json({ message: 'Amap introuvable...' })
 	}
