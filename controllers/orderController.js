@@ -391,6 +391,9 @@ const updateOrder = async (req, res) => {
 				)
 				if (detailToUpdate.length > 0) {
 					product.quantity -= detailToUpdate[0].quantity
+					if (product.quantity < 0) {
+						product.quantity = 0
+					}
 				}
 			})
 		}
@@ -474,6 +477,9 @@ const deleteOrder = async (req, res) => {
 				)
 				if (detailToUpdate.length > 0) {
 					product.quantity -= detailToUpdate[0].quantity
+					if (product.quantity < 0) {
+						product.quantity = 0
+					}
 				}
 			})
 		}
@@ -524,9 +530,13 @@ const getRecapsBySession = async (req, res) => {
 // @access  Private
 const getNextDelivery = async (req, res) => {
 	const { session, amap } = req.query
-	const recapDelivery = await OrderRecap.findOne({ session, amap }).select(
-		'delivery'
-	)
+	if (session === 'undefined') {
+		return
+	}
+	const recapDelivery = await OrderRecap.findOne({
+		session,
+		amap,
+	}).select('delivery')
 	if (recapDelivery) {
 		res.status(200).json(recapDelivery)
 	} else {
