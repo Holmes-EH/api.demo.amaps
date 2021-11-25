@@ -186,7 +186,7 @@ const sendMessage = async (req, res) => {
 		const emailData = {
 			from: `"${user.name}" <${user.email}>`,
 			replyTo: `"${user.name}" <${user.email}>`,
-			to: 'holmes.samuel@protonmail.com',
+			to: `${process.env.ADMIN_EMAIL}`,
 			subject: `${user.name} depuis juju2fruits.com - ${message.object}`,
 			text: `${message.body}`,
 			html: `
@@ -202,10 +202,10 @@ const sendMessage = async (req, res) => {
                     </html>
                 `,
 		}
-		sendEmail(emailData)
+		await sendEmail(emailData)
 		res.status(200).json({ message: 'Message envoyé.' })
 	} catch (error) {
-		res.status(401).json({ message: "Une erreur s'est produite..." })
+		res.status(400).json({ message: "Une erreur s'est produite..." })
 	}
 }
 
