@@ -184,7 +184,7 @@ const sendMessage = async (req, res) => {
 	const { user, message } = req.body
 	try {
 		const emailData = {
-			from: `"${user.name}" <${user.email}>`,
+			from: `"Juju 2 Fruits" <juju2fruits@gmail.com>`,
 			replyTo: `"${user.name}" <${user.email}>`,
 			to: `${process.env.ADMIN_EMAIL}`,
 			subject: `${user.name} depuis juju2fruits.com - ${message.object}`,
