@@ -172,7 +172,7 @@ const sendMailToAmap = async (req, res) => {
             `
 		let promiseArray = amap.contact.emails.map((email) => {
 			let mailData = {
-				from: `"Juju 2 Fruits" <juju2fruits@gmail.com>`,
+				from: `"Juju 2 Fruits" <juju2fruits64@gmail.com>`,
 				replyTo: `"${process.env.ADMIN_EMAIL}"`,
 				to: email.email,
 				subject: messageObject,

@@ -11,7 +11,7 @@ const sendEmailToAdmin = async (req, res) => {
 	const { name, email, body } = req.body
 	try {
 		const emailData = {
-			from: `"${name}" <${email}>`,
+			from: `"Juju 2 Fruits" <juju2fruits64@gmail.com>`,
 			replyTo: `"${name}" <${email}>`,
 			to: `${process.env.ADMIN_EMAIL}`,
 			subject: `Message envoyé depuis ${name} depuis juju2fruits.com`,
