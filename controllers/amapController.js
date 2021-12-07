@@ -8,15 +8,6 @@ import { sendEmail } from '@/lib/sendmail'
 
 dbConnect()
 
-const elision = (productTitle) => {
-	const vowels = ['a', 'e', 'i', 'o', 'u', 'y', 'h']
-	if (vowels.includes(productTitle.slice(0, 1).toLowerCase())) {
-		return `d'${productTitle.toLowerCase()}`
-	} else {
-		return `de ${productTitle.toLowerCase()}`
-	}
-}
-
 // @desc    Register a new amap
 // @route   POST /api/amaps
 // @access  Private + Admin

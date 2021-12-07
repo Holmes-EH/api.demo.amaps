@@ -17,6 +17,9 @@ const orderRecapSchema = mongoose.Schema({
 		type: Number,
 		required: true,
 	},
+	totalWeight: {
+		type: Number,
+	},
 	amap: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Amap',

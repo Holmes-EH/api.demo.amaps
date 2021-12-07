@@ -41,6 +41,8 @@ const newOrder = async (req, res) => {
 					)
 					if (detailToUpdate.length > 0) {
 						product.quantity += detailToUpdate[0].quantity
+						orderRecapExists.totalWeight +=
+							detailToUpdate[0].quantity
 					}
 				})
 
@@ -50,6 +52,7 @@ const newOrder = async (req, res) => {
 					products: details,
 					session,
 					amap,
+					totalWeight: 0,
 				})
 			}
 			order = await order.populate('details.product')
@@ -391,8 +394,12 @@ const updateOrder = async (req, res) => {
 				)
 				if (detailToUpdate.length > 0) {
 					product.quantity -= detailToUpdate[0].quantity
+					orderRecapExists.totalWeight -= detailToUpdate[0].quantity
 					if (product.quantity < 0) {
 						product.quantity = 0
+					}
+					if (orderRecapExists.totalWeight < 0) {
+						orderRecapExists.totalWeight = 0
 					}
 				}
 			})
@@ -427,6 +434,7 @@ const updateOrder = async (req, res) => {
 				)
 				if (detailToUpdate.length > 0) {
 					product.quantity += detailToUpdate[0].quantity
+					orderRecapExists.totalWeight += detailToUpdate[0].quantity
 				}
 			})
 			updatedOrder.details.map((detail) => {

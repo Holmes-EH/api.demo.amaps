@@ -41,6 +41,7 @@ const addNewSession = async (req, res) => {
 						products: productArray,
 						session,
 						amap: amaps[index],
+						totalWeight: 0,
 					})
 				}
 			}
