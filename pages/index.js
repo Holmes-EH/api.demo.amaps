@@ -23,7 +23,7 @@ export default function Home() {
 			<div>
 				<h1>When life gives you lemons...</h1>
 			</div>
-			<footer>Sell 'em to lemonade makers !</footer>
+			<footer>Sell &apos;em to lemonade makers !</footer>
 		</div>
 	)
 }
