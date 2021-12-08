@@ -22,58 +22,66 @@ const newOrder = async (req, res) => {
 			message: `Cette commande pour cet utilisateur et ce mois existe déjà...\nMettez la à jour -> ${orderExists._id} ?`,
 		})
 	} else {
-		let order = await Order.create({
-			client,
-			details,
+		const orderRecapExists = await OrderRecap.findOne({
 			amap,
 			session,
 		})
-
-		if (order) {
-			const orderRecapExists = await OrderRecap.findOne({
-				amap,
-				session,
-			})
-			if (orderRecapExists) {
-				orderRecapExists.products.forEach((product) => {
-					let detailToUpdate = order.details.filter((detail) =>
-						detail.product.equals(product.product)
-					)
-					if (detailToUpdate.length > 0) {
-						product.quantity += detailToUpdate[0].quantity
-						orderRecapExists.totalWeight +=
-							detailToUpdate[0].quantity
-					}
+		if (orderRecapExists) {
+			if (orderRecapExists.totalWeight <= 900) {
+				let order = await Order.create({
+					client,
+					details,
+					amap,
+					session,
 				})
 
-				await orderRecapExists.save()
+				if (order) {
+					orderRecapExists.products.forEach((product) => {
+						let detailToUpdate = order.details.filter((detail) =>
+							detail.product.equals(product.product)
+						)
+						if (detailToUpdate.length > 0) {
+							product.quantity += detailToUpdate[0].quantity
+							orderRecapExists.totalWeight +=
+								detailToUpdate[0].quantity
+						}
+					})
+
+					await orderRecapExists.save()
+
+					order = await order.populate('details.product')
+
+					const emailData = await buildEmailData({
+						client: order.client,
+						details: order.details,
+						amapId: order.amap,
+						session: order.session,
+					})
+					await sendEmail(emailData)
+					res.status(201).json({
+						_id: order._id,
+						client: order.client,
+						details: order.details,
+						amap: order.amap,
+						session: order.session,
+					})
+				} else {
+					res.status(400).json({
+						message: 'Données de commande érronés.',
+					})
+				}
 			} else {
-				await OrderRecap.create({
-					products: details,
-					session,
-					amap,
-					totalWeight: 0,
+				res.status(401).json({
+					message:
+						'Désolé, nous avons atteint le poids maximum pour cette amap.\nRevenez le mois prochain...',
 				})
 			}
-			order = await order.populate('details.product')
-
-			const emailData = await buildEmailData({
-				client: order.client,
-				details: order.details,
-				amapId: order.amap,
-				session: order.session,
-			})
-			sendEmail(emailData)
-			res.status(201).json({
-				_id: order._id,
-				client: order.client,
-				details: order.details,
-				amap: order.amap,
-				session: order.session,
-			})
 		} else {
-			res.status(400).json({
-				message: 'Données de commande érronés.',
+			await OrderRecap.create({
+				products: details,
+				session,
+				amap,
+				totalWeight: 0,
 			})
 		}
 	}
@@ -388,80 +396,88 @@ const updateOrder = async (req, res) => {
 			session: order.session,
 		})
 		if (orderRecapExists) {
-			orderRecapExists.products.map((product) => {
-				let detailToUpdate = order.details.filter((detail) =>
-					detail.product._id.equals(product.product)
-				)
-				if (detailToUpdate.length > 0) {
-					product.quantity -= detailToUpdate[0].quantity
-					orderRecapExists.totalWeight -= detailToUpdate[0].quantity
-					if (product.quantity < 0) {
-						product.quantity = 0
+			if (orderRecapExists.totalWeight <= 900) {
+				// Remove previous order details from order recap
+				orderRecapExists.products.map((product) => {
+					let detailToUpdate = order.details.filter((detail) =>
+						detail.product._id.equals(product.product)
+					)
+					if (detailToUpdate.length > 0) {
+						product.quantity -= detailToUpdate[0].quantity
+						orderRecapExists.totalWeight -=
+							detailToUpdate[0].quantity
+						if (product.quantity < 0) {
+							product.quantity = 0
+						}
+						if (orderRecapExists.totalWeight < 0) {
+							orderRecapExists.totalWeight = 0
+						}
 					}
-					if (orderRecapExists.totalWeight < 0) {
-						orderRecapExists.totalWeight = 0
+				})
+				order.paid = req.body.order.paid ? true : false
+				order.details = req.body.order.details || order.details
+				const newOrder = await order.save()
+				const updatedOrder = await Order.findById(newOrder._id)
+					.populate({
+						path: 'details',
+						populate: {
+							path: 'product',
+							select: ['_id', 'title', 'pricePerKg', 'unitOnly'],
+							model: Product,
+						},
+					})
+					.populate({
+						path: 'amap',
+						select: ['name', 'groupement'],
+						model: Amap,
+					})
+					.populate({ path: 'client', select: ['name'], model: User })
+
+				// Now add updated order details to recap
+
+				let productList = []
+				orderRecapExists.products.map((product) => {
+					productList.push(product.product.toString())
+					let detailToUpdate = updatedOrder.details.filter((detail) =>
+						detail.product._id.equals(product.product)
+					)
+					if (detailToUpdate.length > 0) {
+						product.quantity += detailToUpdate[0].quantity
+						orderRecapExists.totalWeight +=
+							detailToUpdate[0].quantity
 					}
-				}
-			})
+				})
+				updatedOrder.details.map((detail) => {
+					if (!productList.includes(detail.product._id.toString())) {
+						orderRecapExists.products.push(detail)
+					}
+				})
+
+				await orderRecapExists.save()
+
+				const emailData = await buildEmailData({
+					client: updatedOrder.client,
+					details: updatedOrder.details,
+					amapId: updatedOrder.amap,
+					session: updatedOrder.session,
+				})
+				await sendEmail(emailData)
+
+				res.status(200).json({
+					_id: updatedOrder._id,
+					client: updatedOrder.client,
+					details: updatedOrder.details,
+					amap: updatedOrder.amap,
+					session: updatedOrder.session,
+					paid: updatedOrder.paid,
+				})
+			} else {
+				res.status(401).json({
+					message:
+						'Désolé, nous avons atteint le poids maximum pour cette amap.\nRevenez le mois prochain...',
+				})
+			}
 		}
-
-		order.paid = req.body.order.paid ? true : false
-		order.details = req.body.order.details || order.details
-		const newOrder = await order.save()
-		const updatedOrder = await Order.findById(newOrder._id)
-			.populate({
-				path: 'details',
-				populate: {
-					path: 'product',
-					select: ['_id', 'title', 'pricePerKg', 'unitOnly'],
-					model: Product,
-				},
-			})
-			.populate({
-				path: 'amap',
-				select: ['name', 'groupement'],
-				model: Amap,
-			})
-			.populate({ path: 'client', select: ['name'], model: User })
-
-		// Now add updated order details to recap
-		if (orderRecapExists) {
-			let productList = []
-			orderRecapExists.products.map((product) => {
-				productList.push(product.product.toString())
-				let detailToUpdate = updatedOrder.details.filter((detail) =>
-					detail.product._id.equals(product.product)
-				)
-				if (detailToUpdate.length > 0) {
-					product.quantity += detailToUpdate[0].quantity
-					orderRecapExists.totalWeight += detailToUpdate[0].quantity
-				}
-			})
-			updatedOrder.details.map((detail) => {
-				if (!productList.includes(detail.product._id.toString())) {
-					orderRecapExists.products.push(detail)
-				}
-			})
-
-			await orderRecapExists.save()
-		}
-
-		const emailData = await buildEmailData({
-			client: updatedOrder.client,
-			details: updatedOrder.details,
-			amapId: updatedOrder.amap,
-			session: updatedOrder.session,
-		})
-		sendEmail(emailData)
-
-		res.status(200).json({
-			_id: updatedOrder._id,
-			client: updatedOrder.client,
-			details: updatedOrder.details,
-			amap: updatedOrder.amap,
-			session: updatedOrder.session,
-			paid: updatedOrder.paid,
-		})
 	} else {
 		res.status(404).json({ message: 'Commande introuvable...' })
 	}
