@@ -2,6 +2,7 @@ import Session from '@/models/sessionModel'
 import Amap from '@/models/amapModel'
 import Product from '@/models/productModel'
 import OrderRecap from '@/models/orderRecapModel'
+import Order from '@/models/orderModel'
 
 import dbConnect from '@/lib/dbConnect.js'
 
@@ -145,6 +146,7 @@ const deleteSession = async (req, res) => {
 	const session = await Session.findById(req.body._id)
 	if (session) {
 		await OrderRecap.deleteMany({ session: session.session })
+		await Order.deleteMany({ session: session.session })
 		await session.remove()
 		res.status(200).json({ message: 'Commandes désautorisées.' })
 	} else {
