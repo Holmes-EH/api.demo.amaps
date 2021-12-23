@@ -14,7 +14,8 @@ dbConnect()
 // @access  Public
 const registerUser = async (req, res) => {
 	const { name, email, amap, password } = req.body
-	const isAdmin = req.body.isAdmin || false
+
+	const isAdmin = false
 
 	const userExists = await User.findOne({ email })
 
