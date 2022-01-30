@@ -54,6 +54,7 @@ const authUser = async (req, res) => {
 	const user = await User.findOne({ email })
 
 	if (user && (await user.matchPassword(password))) {
+		console.info(`Logged in ${user.name}`)
 		res.json({
 			_id: user._id,
 			name: user.name,
@@ -63,6 +64,7 @@ const authUser = async (req, res) => {
 			token: generateToken(user._id),
 		})
 	} else {
+		console.log(`Login denied for ${user.name}`)
 		res.status(401).json({ message: 'Email ou mot de passe erroné' })
 	}
 }
@@ -165,6 +167,7 @@ const updateUser = async (req, res) => {
 // @access  Private + Admin
 const deleteUser = async (req, res) => {
 	const user = await User.findById(req.query.id)
+	// deepcode ignore PromiseNotCaughtGeneral: <please specify a reason of ignoring this>
 	await Order.find({ client: req.query.id }).then((results) => {
 		return results.map(async (order) => {
 			return await order.remove()
@@ -204,8 +207,10 @@ const sendMessage = async (req, res) => {
                 `,
 		}
 		await sendEmail(emailData)
+		console.info(`sent message : \n ${emailData}`)
 		res.status(200).json({ message: 'Message envoyé.' })
 	} catch (error) {
+		console.error(`error on user/sendMessage :\n${error}`)
 		res.status(400).json({ message: "Une erreur s'est produite..." })
 	}
 }
