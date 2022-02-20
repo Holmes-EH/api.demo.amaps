@@ -7,7 +7,7 @@ dbConnect()
 const generateAccessCode = async (length) => {
 	const amapAccessCodesResult = await Amap.find({}).select('accessCode')
 	let amapAccessCodes = []
-	amapAccessCodesResult.map((object) => {
+	amapAccessCodesResult.forEach((object) => {
 		amapAccessCodes.push(object.accessCode)
 	})
 	let code = ''

@@ -399,7 +399,7 @@ const updateOrder = async (req, res) => {
 		if (orderRecapExists) {
 			if (orderRecapExists.totalWeight <= 900) {
 				// Remove previous order details from order recap
-				orderRecapExists.products.map((product) => {
+				orderRecapExists.products.forEach((product) => {
 					let detailToUpdate = order.details.filter((detail) =>
 						detail.product._id.equals(product.product)
 					)
@@ -437,7 +437,7 @@ const updateOrder = async (req, res) => {
 				// Now add updated order details to recap
 
 				let productList = []
-				orderRecapExists.products.map((product) => {
+				orderRecapExists.products.forEach((product) => {
 					productList.push(product.product.toString())
 					let detailToUpdate = updatedOrder.details.filter((detail) =>
 						detail.product._id.equals(product.product)
@@ -448,7 +448,7 @@ const updateOrder = async (req, res) => {
 							detailToUpdate[0].quantity
 					}
 				})
-				updatedOrder.details.map((detail) => {
+				updatedOrder.details.forEach((detail) => {
 					if (!productList.includes(detail.product._id.toString())) {
 						orderRecapExists.products.push(detail)
 					}
@@ -496,7 +496,7 @@ const deleteOrder = async (req, res) => {
 			session: order.session,
 		})
 		if (orderRecapExists) {
-			orderRecapExists.products.map((product) => {
+			orderRecapExists.products.forEach((product) => {
 				let detailToUpdate = order.details.filter((detail) =>
 					detail.product.equals(product.product)
 				)
