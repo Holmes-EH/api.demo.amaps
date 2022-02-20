@@ -58,6 +58,7 @@ const newOrder = async (req, res) => {
 						session: order.session,
 					})
 					await sendEmail(emailData)
+					console.info(`sent message to: \n ${emailData.to}`)
 					res.status(201).json({
 						_id: order._id,
 						client: order.client,
