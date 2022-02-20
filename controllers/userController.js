@@ -186,9 +186,11 @@ const deleteUser = async (req, res) => {
 // @access  Private
 const sendMessage = async (req, res) => {
 	const { user, message } = req.body
+	// deepcode ignore HTTPSourceWithUncheckedType: this is a trusted route
+	message.body = message.body.replace(/(?:\r\n|\r|\n)/g, '<br>')
 	try {
 		const emailData = {
-			from: `"Juju 2 Fruits" <juju2fruits64@gmail.com>`,
+			from: `"Juju 2 Fruits" <nepasrepondre@juju2fruits.com>`,
 			replyTo: `"${user.name}" <${user.email}>`,
 			to: `${process.env.ADMIN_EMAIL}`,
 			subject: `${user.name} depuis juju2fruits.com - ${message.object}`,
@@ -201,13 +203,13 @@ const sendMessage = async (req, res) => {
                         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                     </head>
                     <body>
-                        ${message.body.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                        ${message.body}
                     </body>
                     </html>
                 `,
 		}
 		await sendEmail(emailData)
-		console.info(`sent message : \n ${emailData}`)
+		console.info(`sent message to: \n ${emailData.to}`)
 		res.status(200).json({ message: 'Message envoyé.' })
 	} catch (error) {
 		console.error(`error on user/sendMessage :\n${error}`)

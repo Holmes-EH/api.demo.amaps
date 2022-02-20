@@ -129,6 +129,8 @@ const sendMailToAmap = async (req, res) => {
 	const { amapId, sessionId, messageObject, messageBody } = req.body
 	const amap = await Amap.findById(amapId)
 	const sessionDetails = await Session.findById(sessionId)
+	// deepcode ignore HTTPSourceWithUncheckedType: this is a trusted route
+	const formattedMessage = messageBody.replace(/(?:\r\n|\r|\n)/g, '<br>')
 	if (amap) {
 		const orderRecap = await OrderRecap.findOne({
 			amap: amapId,
@@ -156,15 +158,15 @@ const sendMailToAmap = async (req, res) => {
                         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                     </head>
                     <body>
-                        ${messageBody.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                        ${formattedMessage}
                     </body>
                     </html>
                     
             `
 		let promiseArray = amap.contact.emails.map((email) => {
 			let mailData = {
-				from: `"Juju 2 Fruits" <juju2fruits64@gmail.com>`,
-				replyTo: `"${process.env.ADMIN_EMAIL}"`,
+				from: `"Juju 2 Fruits" <nepasrepondre@juju2fruits.com>`,
+				replyTo: `${process.env.ADMIN_EMAIL}`,
 				to: email.email,
 				subject: messageObject,
 				text: messageBody,

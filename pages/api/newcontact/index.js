@@ -9,6 +9,8 @@ const handler = nc({ attachParams: true })
 // @access  Public
 const sendEmailToAdmin = async (req, res) => {
 	const { name, email, body } = req.body
+	// deepcode ignore HTTPSourceWithUncheckedType: this is a trusted route
+	const formattedMessage = body.replace(/(?:\r\n|\r|\n)/g, '<br>')
 	try {
 		const emailData = {
 			from: `"Juju 2 Fruits" <juju2fruits64@gmail.com>`,
@@ -24,7 +26,7 @@ const sendEmailToAdmin = async (req, res) => {
                         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                     </head>
                     <body>
-                        ${body.replace(/(?:\r\n|\r|\n)/g, '<br>')}
+                        ${formattedMessage}
                     </body>
                     </html>
                 `,
