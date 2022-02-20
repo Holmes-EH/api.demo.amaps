@@ -100,14 +100,18 @@ const deleteProduct = async (req, res) => {
 	const product = await Product.findById(req.query.id)
 	await Order.find({
 		'details.product': { $in: req.query.id },
-	}).then((results) => {
-		return results.map(async (order) => {
-			order.details = order.details.filter(
-				(detail) => detail.product.toString() !== req.query.id
-			)
-			return await Order.replaceOne({ _id: order._id }, order)
-		})
 	})
+		.then((results) => {
+			return results.map(async (order) => {
+				order.details = order.details.filter(
+					(detail) => detail.product.toString() !== req.query.id
+				)
+				return await Order.replaceOne({ _id: order._id }, order)
+			})
+		})
+		.catch((error) => {
+			console.error(error)
+		})
 
 	if (product) {
 		product.remove()
