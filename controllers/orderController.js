@@ -456,6 +456,8 @@ const updateOrder = async (req, res) => {
 
 				await orderRecapExists.save()
 
+				//TODO : do not send email if only paid status has changed...
+
 				const emailData = await buildEmailData({
 					client: updatedOrder.client,
 					details: updatedOrder.details,
